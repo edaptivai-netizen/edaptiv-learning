@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - EDAPTIV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 1rem 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            margin-left: 2rem;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .radio-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            background: #f5f7fa;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .radio-item:hover {
+            background: #e2e8f0;
+        }
+
+        .radio-item.selected {
+            border-color: #667eea;
+            background: #eef2ff;
+        }
+
+        .radio-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .radio-item input[type="radio"] {
+            display: none;
+        }
+
+        .radio-label {
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            background: #f5f7fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            background: #e2e8f0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.8rem;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            color: #065f46;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 2rem;
+            }
+
+            .radio-group,
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🎓 EDAPTIV</div>
+        <div class="nav-links">
+            <a href="{% url 'student-dashboard' %}">Dashboard</a>
+            <a href="{% url 'materials-library' %}">Materials</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚙ Edit Your Profile</h1>
+            <p>Update your learning preferences for better personalization</p>
+        </div>
+
+        <div class="form-container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="success-message">
+                        <strong>✓ Success!</strong> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Learning Style -->
+                <div class="form-group">
+                    <label class="section-title">Preferred Learning Style</label>
+                    <div class="help-text" style="margin-bottom: 1rem;">
+                        Choose how you learn best. This helps us personalize content for you.
+                    </div>
+                    <div class="radio-group">
+                        <div class="radio-item {% if form.learning_style.value == 1 %}selected{% endif %}" data-value="1">
+                            <input type="radio" name="learning_style" value="1" id="style_visual" {% if form.learning_style.value == 1 %}checked{% endif %}>
+                            <label for="style_visual" class="radio-label">
+                                <div class="radio-icon">👁</div>
+                                Visual
+                            </label>
+                        </div>
+                        <div class="radio-item {% if form.learning_style.value == 2 %}selected{% endif %}" data-value="2">
+                            <input type="radio" name="learning_style" value="2" id="style_auditory" {% if form.learning_style.value == 2 %}checked{% endif %}>
+                            <label for="style_auditory" class="radio-label">
+                                <div class="radio-icon">👂</div>
+                                Auditory
+                            </label>
+                        </div>
+                        <div class="radio-item {% if form.learning_style.value == 3 %}selected{% endif %}" data-value="3">
+                            <input type="radio" name="learning_style" value="3" id="style_reading" {% if form.learning_style.value == 3 %}checked{% endif %}>
+                            <label for="style_reading" class="radio-label">
+                                <div class="radio-icon">📝</div>
+                                Reading/Writing
+                            </label>
+                        </div>
+                        <div class="radio-item {% if form.learning_style.value == 4 %}selected{% endif %}" data-value="4">
+                            <input type="radio" name="learning_style" value="4" id="style_kinesthetic" {% if form.learning_style.value == 4 %}checked{% endif %}>
+                            <label for="style_kinesthetic" class="radio-label">
+                                <div class="radio-icon">✋</div>
+                                Kinesthetic
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Challenges -->
+                <div class="form-group">
+                    <label class="section-title">Learning Accommodations</label>
+                    <div class="help-text" style="margin-bottom: 1rem;">
+                        Select any challenges you have. We'll adapt content to provide appropriate support.
+                    </div>
+                    <div class="checkbox-grid">
+                        {{ form.challenges }}
+                    </div>
+                </div>
+
+                <!-- Grade Level -->
+                <div class="form-group">
+                    <label for="id_grade_level">Grade Level</label>
+                    {{ form.grade_level }}
+                    <div class="help-text">e.g., "Grade 4", "Grade 2", "Grade 1"</div>
+                </div>
+
+                <!-- Bio -->
+                <div class="form-group">
+                    <label for="id_bio">About You</label>
+                    {{ form.bio }}
+                    <div class="help-text">Tell us about your learning goals and interests</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+
+                <div class="back-link">
+                    <a href="{% url 'student-dashboard' %}">← Back to Dashboard</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Radio button styling
+        document.querySelectorAll('.radio-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Remove selected class from all items
+                document.querySelectorAll('.radio-item').forEach(r => {
+                    r.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked item
+                this.classList.add('selected');
+            });
+        });
+
+        // Set initial selected state
+        document.querySelectorAll('.radio-item input[type="radio"]:checked').forEach(radio => {
+            radio.closest('.radio-item').classList.add('selected');
+        });
+    </script>
+</body>
+</html>

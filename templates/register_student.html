@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - EDAPTIV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            background: #f5f7fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .checkbox-item:hover {
+            background: #e2e8f0;
+        }
+
+        .checkbox-item.checked {
+            background: #eef2ff;
+            border-color: #667eea;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.8rem;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            flex: 1;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            color: #991b1b;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎒 Student Registration</h1>
+            <p>Create your personalized learning profile</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="error">
+                <strong>Please correct the following errors:</strong>
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3 class="section-title">Basic Information</h3>
+
+                <div class="form-group">
+                    <label for="id_username">Username*</label>
+                    {{ form.username }}
+                    <div class="help-text">Choose a unique username</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_email">Email*</label>
+                    {{ form.email }}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="id_first_name">First Name*</label>
+                        {{ form.first_name }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_last_name">Last Name*</label>
+                        {{ form.last_name }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="id_password1">Password*</label>
+                        {{ form.password1 }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_password2">Confirm Password*</label>
+                        {{ form.password2 }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_institution_code">Institution Code*</label>
+                    <input type="text" name="institution_code" id="id_institution_code" required 
+                           placeholder=" "
+                           style="width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+                    <div class="help-text">Enter your institution code given to by your school/college</div>
+                </div>
+            </div>
+
+            <!-- Learning Profile -->
+            <div class="form-section">
+                <h3 class="section-title">How Do You Like to Learn?</h3>
+                <div class="help-text" style="margin-bottom: 1rem;">
+                    Select the learning style that work for you. Our AI will adapt content accordingly.
+                </div>
+                
+                <div class="form-group">
+                    <label><strong>Preferred Learning Style</strong></label>
+                     {{ form.learning_style }}
+                </div>
+
+        
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="id_grade_level">Grade Level (Optional)</label>
+                    <input type="text" name="grade_level" id="id_grade_level" 
+                           placeholder="e.g., Grade 10, P4 ..."
+                           style="width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+                </div>
+            </div>
+
+            <!-- Learning Challenges -->
+            <div class="form-section">
+                <h3 class="section-title">Learning Accommodations</h3>
+                <div class="help-text" style="margin-bottom: 1rem;">
+                    Select any learning challenges you have. Content will be adapted to provide appropriate accommodations. Select all that apply.
+                </div>
+
+                <div class="form-group">
+                    <label><strong>Learning Challenges</strong></label>
+                    {{ form.challenges }}
+                    </div>
+
+            </div>
+            <!-- Bio -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="id_bio">About You (Optional)</label>
+                    <textarea name="bio" id="id_bio" placeholder="Tell us about your learning interests..."
+                              style="width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; min-height: 100px;"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Account</button>
+
+            <div class="back-link">
+                <a href="{% url 'register-choice' %}">← Back to role selection</a> | 
+                <a href="{% url 'login' %}">Already have an account? Login</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Toggle checkbox and visual styling
+        function toggleCheckbox(element, checkboxId) {
+            const checkbox = document.getElementById(checkboxId);
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('checked');
+            } else {
+                element.classList.remove('checked');
+            }
+        }
+
+        // Initialize checked state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const item = this.closest('.checkbox-item');
+                    if (this.checked) {
+                        item.classList.add('checked');
+                    } else {
+                        item.classList.remove('checked');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

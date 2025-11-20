@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materials Library - EDAPTIV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 1rem 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            margin-left: 2rem;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-filter {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 0.6rem 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .filter-tab:hover, .filter-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .material-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .material-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .material-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .material-subject {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .material-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: #f0f9ff;
+            color: #0369a1;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-right: 0.3rem;
+        }
+
+        @media (max-width: 768px) {
+            .materials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-bar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🎓 EDAPTIV</div>
+        <div class="nav-links">
+            <a href="{% url 'student-dashboard' %}">Dashboard</a>
+            <a href="{% url 'my-progress' %}">My Progress</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>📚 Materials Library</h1>
+            <p>Discover personalized learning materials adapted to your needs</p>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-filter">
+            <div class="search-bar">
+                <input type="text" placeholder="🔍 Search materials..." id="search-input">
+            </div>
+            
+            <div class="filter-tabs">
+                <a href="{% url 'materials-library' %}" class="filter-tab {% if not request.GET.subject %}active{% endif %}">
+                    All Subjects
+                </a>
+                {% for subject_code, subject_name in subjects %}
+                    <a href="?subject={{ subject_code }}" class="filter-tab {% if request.GET.subject == subject_code %}active{% endif %}">
+                        {{ subject_name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Materials Grid -->
+        {% if materials %}
+            <div class="materials-grid" id="materials-grid">
+                {% for material in materials %}
+                    <div class="material-card" onclick="location.href='{% url 'material-detail' material.id %}'" data-title="{{ material.title|lower }}" data-description="{{ material.description|lower }}">
+                        <div class="material-icon">
+                            {% if material.subject == 'math' %}🔢
+                            {% elif material.subject == 'science' %}🔬
+                            {% elif material.subject == 'english' %}📖
+                            {% elif material.subject == 'history' %}📜
+                            {% elif material.subject == 'art' %}🎨
+                            {% else %}📄
+                            {% endif %}
+                        </div>
+                        
+                        <h3 class="material-title">{{ material.title }}</h3>
+                        
+                        <span class="material-subject">{{ material.get_subject_display }}</span>
+                        
+                        <p class="material-description">
+                            {{ material.description|truncatewords:20 }}
+                        </p>
+
+                        {% if material.target_learning_styles.all %}
+                            <div style="margin-bottom: 1rem;">
+                                {% for style in material.target_learning_styles.all %}
+                                    <span class="badge">{{ style.get_name_display }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="material-meta">
+                            <span>📅 {{ material.uploaded_at|date:"M d, Y" }}</span>
+                            <a href="{% url 'material-detail' material.id %}" class="btn btn-primary" onclick="event.stopPropagation()">
+                                Start Learning
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <h2>No Materials Found</h2>
+                <p>There are no materials available in this category yet.</p>
+                <a href="{% url 'materials-library' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                    View All Materials
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const materialCards = document.querySelectorAll('.material-card');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+
+            materialCards.forEach(card => {
+                const title = card.dataset.title;
+                const description = card.dataset.description;
+
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

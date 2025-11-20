@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ material.title }} - EDAPTIV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 1rem 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            margin-left: 2rem;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .material-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .material-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .material-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            opacity: 0.95;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .adaptation-banner {
+            background: #10b981;
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .adaptation-banner-icon {
+            font-size: 2rem;
+        }
+
+        /* VIDEO SECTION STYLES */
+        .video-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            display: block;
+            border-radius: 15px;
+        }
+
+        .video-loading {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .video-error {
+            text-align: center;
+            padding: 2rem;
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 15px;
+            color: #c33;
+        }
+
+        .video-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f9ff;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #0369a1;
+        }
+
+        .progress-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .progress-bar-container {
+            margin: 1rem 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .content-section {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .content-section h2 {
+            color: #333;
+            margin: 2rem 0 1rem;
+        }
+
+        .content-section p {
+            margin-bottom: 1.5rem;
+            color: #444;
+        }
+
+        .adaptation-notes {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 10px;
+        }
+
+        .adaptation-notes h3 {
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer {
+            background: #f5f7fa;
+            padding: 1rem;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .material-header {
+                padding: 2rem;
+            }
+
+            .material-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content-section {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🎓 EDAPTIV</div>
+        <div class="nav-links">
+            <a href="{% url 'student-dashboard' %}">Dashboard</a>
+            <a href="{% url 'materials-library' %}">Materials</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Material Header -->
+        <div class="material-header">
+            <h1>{{ material.title }}</h1>
+            <div class="material-meta">
+                <div class="meta-item">
+                    <span>📚</span>
+                    <span>{{ material.get_subject_display }}</span>
+                </div>
+                <div class="meta-item">
+                    <span>📅</span>
+                    <span>Uploaded {{ material.uploaded_at|date:"M d, Y" }}</span>
+                </div>
+                {% if material.grade_level %}
+                <div class="meta-item">
+                    <span>🎓</span>
+                    <span>{{ material.grade_level }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Adaptation Banner -->
+        {% if adapted_content %}
+        <div class="adaptation-banner">
+            <div class="adaptation-banner-icon">🤖</div>
+            <div>
+                <strong>AI-Adapted Content</strong>
+                <p style="margin: 0; opacity: 0.95;">
+                    This content has been personalized for your learning style and needs.
+                </p>
+            </div>
+        </div>
+
+        <!-- VIDEO SECTION -->
+        <div class="video-section">
+            <h2 style="margin-bottom: 1rem;">🎥 Your Personal AI Tutor</h2>
+            
+            <div id="video-container-wrapper">
+                {% if adapted_content.video_url and adapted_content.video_generation_status == 'ready' %}
+                    <!-- Video is ready -->
+                    <div class="video-container">
+                        <video id="avatar-video" class="video-player" controls autoplay>
+                            <source src="{{ adapted_content.video_url }}" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    </div>
+                    <div class="video-info">
+                        ✅ Video ready! Your personalized AI tutor will guide you through this lesson.
+                    </div>
+                {% else %}
+                    <!-- Video needs to be generated -->
+                    <div id="video-loading" class="video-loading">
+                        <div class="spinner"></div>
+                        <h3>🎬 Generating Your Personal AI Tutor...</h3>
+                        <p id="loading-message">Please wait while we create your personalized video lesson. This takes about 60-90 seconds.</p>
+                        <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 1rem;">
+                            <span id="generation-timer">0</span> seconds elapsed
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Progress Section -->
+        {% if progress %}
+        <div class="progress-section">
+            <h2 style="margin-bottom: 1rem;">Your Progress</h2>
+            
+            <div class="progress-bar-container">
+                <div class="progress-label">
+                    <span>Completion</span>
+                    <span id="progress-value">{{ progress.completion_percentage }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-bar" style="width: {{ progress.completion_percentage }}%"></div>
+                </div>
+            </div>
+
+            <div class="timer">
+                <span>⏱</span>
+                <span>Time spent: <strong id="time-display">{{ progress.time_spent_minutes }} min</strong></span>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="updateProgress(25)">+25%</button>
+                <button class="btn btn-primary" onclick="updateProgress(50)">+50%</button>
+                <button class="btn btn-primary" onclick="markComplete()">Mark Complete</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Adapted Content -->
+        <div class="content-section">
+            {% if adapted_content %}
+                <div class="adaptation-notes">
+                    <h3>🎯 Personalization Applied</h3>
+                    <p>{{ adapted_content.adaptation_notes }}</p>
+                </div>
+
+                <div style="white-space: pre-wrap;">{{ adapted_content.adapted_text }}</div>
+            {% else %}
+                <h2>{{ material.title }}</h2>
+                <p>{{ material.description }}</p>
+                
+                <div style="margin: 2rem 0; padding: 2rem; background: #f0f9ff; border-radius: 10px; text-align: center;">
+                    <p>🤖 <strong>Generating your personalized version...</strong></p>
+                    <p>Content is being adapted to match your learning style.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        let timeSpent = {{ progress.time_spent_minutes|default:0 }};
+        let startTime = Date.now();
+        let generationStartTime = Date.now();
+        let videoGenerationInterval = null;
+
+        // Track time spent on page
+        setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 60000);
+            if (elapsed > 0) {
+                timeSpent += 1;
+                document.getElementById('time-display').textContent = timeSpent + ' min';
+                startTime = Date.now();
+            }
+        }, 60000);
+
+        // Update generation timer
+        function updateGenerationTimer() {
+            const timerEl = document.getElementById('generation-timer');
+            if (timerEl) {
+                const elapsed = Math.floor((Date.now() - generationStartTime) / 1000);
+                timerEl.textContent = elapsed;
+            }
+        }
+
+        // Start video generation if needed
+        {% if adapted_content and not adapted_content.video_url %}
+        window.addEventListener('DOMContentLoaded', function() {
+            generateVideo();
+            
+            // Update timer every second
+            setInterval(updateGenerationTimer, 1000);
+        });
+
+        function generateVideo() {
+            console.log('🎬 Starting video generation...');
+            
+            fetch('{% url "generate-video" material.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Video generation response:', data);
+                
+                if (data.success && data.status === 'ready') {
+                    // Video is ready!
+                    displayVideo(data.video_url, data.cached);
+                } else if (data.status === 'generating') {
+                    // Video is still generating, poll for status
+                    document.getElementById('loading-message').textContent = 
+                        'Your video is being generated. This may take 60-90 seconds...';
+                    pollVideoStatus();
+                } else if (data.success === false) {
+                    // Error
+                    displayError(data.error || 'Failed to generate video');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayError('Network error. Please refresh the page.');
+            });
+        }
+
+        function pollVideoStatus() {
+            // Check video status every 5 seconds
+            videoGenerationInterval = setInterval(() => {
+                fetch('{% url "check-video-status" material.id %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Video status:', data.status);
+                        
+                        if (data.status === 'ready' && data.video_url) {
+                            clearInterval(videoGenerationInterval);
+                            displayVideo(data.video_url, false);
+                        } else if (data.status === 'failed') {
+                            clearInterval(videoGenerationInterval);
+                            displayError(data.error || 'Video generation failed');
+                        }
+                        // If still generating, keep polling
+                    })
+                    .catch(error => {
+                        console.error('Polling error:', error);
+                    });
+            }, 5000); // Poll every 5 seconds
+        }
+
+        function displayVideo(videoUrl, cached) {
+            const wrapper = document.getElementById('video-container-wrapper');
+            
+            const message = cached ? 
+                '✅ Video loaded from cache! (Saving credits 💰)' : 
+                '✅ Video ready! Your personalized AI tutor will guide you through this lesson.';
+            
+            wrapper.innerHTML = `
+                <div class="video-container">
+                    <video id="avatar-video" class="video-player" controls autoplay>
+                        <source src="${videoUrl}" type="video/mp4">
+                        Your browser does not support video playback.
+                    </video>
+                </div>
+                <div class="video-info">
+                    ${message}
+                </div>
+            `;
+            
+            // Show success notification
+            alert('🎉 Your AI tutor video is ready!');
+        }
+
+        function displayError(errorMessage) {
+            const wrapper = document.getElementById('video-container-wrapper');
+            
+            wrapper.innerHTML = `
+                <div class="video-error">
+                    <h3>❌ Video Generation Failed</h3>
+                    <p>${errorMessage}</p>
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+        {% endif %}
+
+        function updateProgress(amount) {
+            const currentProgress = parseInt(document.getElementById('progress-value').textContent);
+            const newProgress = Math.min(100, currentProgress + amount);
+            
+            fetch('{% url "update-progress" material.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `completion_percentage=${newProgress}&time_spent=${timeSpent}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('progress-value').textContent = data.completion + '%';
+                    document.getElementById('progress-bar').style.width = data.completion + '%';
+                    
+                    if (data.completion === 100) {
+                        alert('🎉 Congratulations! You completed this material!');
+                    }
+                }
+            });
+        }
+
+        function markComplete() {
+            updateProgress(100 - parseInt(document.getElementById('progress-value').textContent));
+        }
+
+        // Save progress before leaving
+        window.addEventListener('beforeunload', () => {
+            const progress = parseInt(document.getElementById('progress-value').textContent);
+            fetch('{% url "update-progress" material.id %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `completion_percentage=${progress}&time_spent=${timeSpent}`,
+                keepalive: true
+            });
+        });
+    </script>
+</body>
+</html>

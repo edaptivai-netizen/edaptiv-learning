@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Material - EDAPTIV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .delete-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .warning-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .material-info {
+            background: #f5f7fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .material-info h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .material-info p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .warning-text {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            padding: 1rem;
+            border-radius: 10px;
+            color: #991b1b;
+            margin-bottom: 2rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="delete-container">
+        <div class="warning-icon">⚠</div>
+        <h1>Delete Material?</h1>
+        <p style="color: #666; margin-bottom: 1.5rem;">
+            Are you sure you want to delete this material? This action cannot be undone.
+        </p>
+
+        <div class="material-info">
+            <h3>{{ material.title }}</h3>
+            <p><strong>Subject:</strong> {{ material.get_subject_display }}</p>
+            <p><strong>Uploaded:</strong> {{ material.uploaded_at|date:"M d, Y" }}</p>
+            {% if material.description %}
+                <p style="margin-top: 0.5rem;"><strong>Description:</strong> {{ material.description|truncatewords:20 }}</p>
+            {% endif %}
+        </div>
+
+        <div class="warning-text">
+            <strong>⚠ Warning:</strong> Deleting this material will also remove all adapted versions and student progress associated with it.
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="button-group">
+                <a href="{% url 'teacher-dashboard' %}" class="btn btn-secondary">
+                    ← Cancel
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    🗑 Yes, Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

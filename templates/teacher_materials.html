@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Materials - EDAPTIV</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 2rem 1rem;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .top-bar h1 {
+            font-size: 1.8rem;
+            color: #333;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        select {
+            padding: 0.7rem 1.2rem;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            font-size: 1rem;
+            margin-right: 0.8rem;
+        }
+
+        .materials-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .materials-table th {
+            background: #f5f7fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .materials-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .materials-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .subject-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #f093fb;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .materials-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">👩‍🏫 EDAPTIV</div>
+            <nav>
+                <a href="{% url 'teacher-dashboard' %}" class="menu-item">
+                    <span style="font-size: 1.5rem;">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'teacher-materials' %}" class="menu-item active">
+                    <span style="font-size: 1.5rem;">📘</span>
+                    <span>Study Materials</span>
+                </a>
+                <a href="{% url 'upload-material' %}" class="menu-item">
+                    <span style="font-size: 1.5rem;">📤</span>
+                    <span>Upload Material</span>
+                </a>
+                <a href="{% url 'logout' %}" class="menu-item">
+                    <span style="font-size: 1.5rem;">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>📘 Study Materials</h1>
+                <a href="{% url 'upload-material' %}" class="btn btn-primary">+ Upload New</a>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Filter by Class Group</h2>
+                </div>
+
+                <form method="get">
+                    <select name="class_group" id="class_group">
+                        <option value="">All Classes</option>
+                        {% for group in class_groups %}
+                            <option value="{{ group.id }}" {% if selected_class == group.id|stringformat:"s" %}selected{% endif %}>
+                                {{ group.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">Apply</button>
+                </form>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Your Materials</h2>
+                </div>
+
+                {% if materials %}
+                    <table class="materials-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Subject</th>
+                                <th>Class Group</th>
+                                <th>Grade Level</th>
+                                <th>Uploaded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for material in materials %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ material.title }}</strong><br>
+                                        <small style="color: #666;">{{ material.description|truncatewords:10 }}</small>
+                                    </td>
+                                    <td><span class="subject-badge">{{ material.get_subject_display }}</span></td>
+                                    <td>{{ material.class_group.name|default:"—" }}</td>
+                                    <td>{{ material.grade_level|default:"—" }}</td>
+                                    <td>{{ material.uploaded_at|date:"M d, Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <h3>No materials found</h3>
+                        <p>Try changing your class filter or upload new materials.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

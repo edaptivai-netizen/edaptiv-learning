@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - EDAPTIV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1rem;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .menu-item {
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .menu-icon {
+            font-size: 1.5rem;
+        }
+
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .welcome-msg h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-msg p {
+            color: #666;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .profile-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .profile-card h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            margin: 0.2rem;
+            font-size: 0.85rem;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .material-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .material-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .material-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .material-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .material-subject {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .material-description {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .materials-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">🎓 EDAPTIV</div>
+            <nav>
+                <a href="{% url 'student-dashboard' %}" class="menu-item active">
+                    <span class="menu-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'materials-library' %}" class="menu-item">
+                    <span class="menu-icon">📚</span>
+                    <span>Materials</span>
+                </a>
+                <a href="{% url 'my-progress' %}" class="menu-item">
+                    <span class="menu-icon">📈</span>
+                    <span>My Progress</span>
+                </a>
+                <a href="{% url 'edit-profile' %}" class="menu-item">
+                    <span class="menu-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+                <a href="{% url 'logout' %}" class="menu-item">
+                    <span class="menu-icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="welcome-msg">
+                    <h1>Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+                    <p>Ready to continue your personalized learning journey?</p>
+                </div>
+                <div class="profile-section">
+                    <div class="avatar">{{ user.username.0|upper }}</div>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-icon">📚</span>
+                    </div>
+                    <div class="stat-value">{{ total_materials }}</div>
+                    <div class="stat-label">Materials Accessed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-icon">✅</span>
+                    </div>
+                    <div class="stat-value">{{ total_progress|floatformat:0 }}%</div>
+                    <div class="stat-label">Average Completion</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-icon">🎯</span>
+                    </div>
+                    <div class="stat-value">{{ challenges.count }}</div>
+                    <div class="stat-label">Active Accommodations</div>
+                </div>
+            </div>
+
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <h2>Your Learning Profile</h2>
+                <div class="profile-info">
+                    <div class="info-item">
+                        <div class="info-label">Learning Style</div>
+                        <div class="info-value">
+                            {% if learning_style %}
+                                {{ learning_style.get_name_display }}
+                            {% else %}
+                                Not Set
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Accommodations</div>
+                        <div class="info-value">
+                            {% if challenges %}
+                                {% for challenge in challenges %}
+                                    <span class="badge">{{ challenge.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="badge">None</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Materials -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Recommended For You</h2>
+                    <a href="{% url 'materials-library' %}" class="btn btn-outline">View All</a>
+                </div>
+
+                {% if recommended_materials %}
+                    <div class="materials-grid">
+                        {% for material in recommended_materials %}
+                            <div class="material-card" onclick="location.href='{% url 'material-detail' material.id %}'">
+                                <div class="material-header">
+                                    <div>
+                                        <h3 class="material-title">{{ material.title }}</h3>
+                                        <span class="material-subject">{{ material.get_subject_display }}</span>
+                                    </div>
+                                    <span style="font-size: 2rem;">📄</span>
+                                </div>
+                                <p class="material-description">
+                                    {{ material.description|truncatewords:20 }}
+                                </p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                                    <span style="font-size: 0.85rem; color: #666;">
+                                        Uploaded {{ material.uploaded_at|timesince }} ago
+                                    </span>
+                                    <a href="{% url 'material-detail' material.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                        Start Learning
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <h3>No materials available yet</h3>
+                        <p>Check back later for personalized study materials</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Progress -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Continue Learning</h2>
+                    <a href="{% url 'my-progress' %}" class="btn btn-outline">View All Progress</a>
+                </div>
+
+                {% if progress %}
+                    <div class="materials-grid">
+                        {% for prog in progress|slice:":3" %}
+                            <div class="material-card" onclick="location.href='{% url 'material-detail' prog.material.id %}'">
+                                <h3 class="material-title">{{ prog.material.title }}</h3>
+                                <span class="material-subject">{{ prog.material.get_subject_display }}</span>
+                                <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">
+                                    {{ prog.completion_percentage }}% Complete
+                                </p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ prog.completion_percentage }}%"></div>
+                                </div>
+                                <div style="margin-top: 1rem; font-size: 0.85rem; color: #666;">
+                                    Last accessed {{ prog.last_accessed|timesince }} ago
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <h3>No progress yet</h3>
+                        <p>Start learning to track your progress</p>
+                        <a href="{% url 'materials-library' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                            Browse Materials
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
