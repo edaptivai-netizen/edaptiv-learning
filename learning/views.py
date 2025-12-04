@@ -15,6 +15,17 @@ from learning import models
 from django.utils import timezone
 from utils.ai_integration import DIDVideoGenerator
 import json
+
+
+#-----------
+#health
+#---------
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
+
+
+
 # -------------------------
 # Homepage
 # -------------------------

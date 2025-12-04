@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import health_check
 
 urlpatterns = [
     # Homepage
@@ -24,6 +25,9 @@ urlpatterns = [
     path('material/<int:material_id>/video-status/', views.check_video_status, name='check-video-status'),
     path('material/<int:material_id>/update-progress/', views.update_progress, name='update-progress'),
     
+    # Health Check
+    path('health/', health_check, name='health'),
+
     # Teacher Routes
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher-dashboard'),
     path('teacher/upload/', views.upload_material, name='upload-material'),
