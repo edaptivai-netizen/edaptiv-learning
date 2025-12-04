@@ -259,7 +259,9 @@
             </div>
 
            
-
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
                 <div class="form-group">
                     <label for="id_title">Material Title*</label>
                     {{ form.title }}
@@ -280,11 +282,11 @@
                 <div class="form-group">
                     <label for="id_grade_level">Grade Level</label>
                     {{ form.grade_level }}
-                    <div class="help-text">e.g., "High School", "College", "Grades 6-8"</div>
+                    <div class="help-text">e.g., "P6", "Grade 2", "Year 5"</div>
                 </div>
 
                 <div class="form-group">
-                    <label>Upload File*</label>
+                    <label for= "id_file">Upload File*</label>
                     <div class="file-upload" onclick="document.getElementById('id_file').click()">
                         <div class="upload-icon">📄</div>
                         <p><strong>Click to upload</strong> or drag and drop</p>
@@ -296,14 +298,13 @@
                     <div id="file-name" style="margin-top: 1rem; color: #10b981; font-weight: 600;"></div>
                 </div>
 
-                 
                 <button type= 'submit' class="btn btn-primary"> Upload Material</button>
             </form>
 
                 <div class="back-link">
                     <a href="{% url 'teacher-dashboard' %}">← Back to Dashboard</a>
                 </div>
-            </form>
+            
         </div>
     </div>
 

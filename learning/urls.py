@@ -22,7 +22,7 @@ urlpatterns = [
     path('material/<int:material_id>/', views.material_detail, name='material-detail'),
     path('material/<int:material_id>/generate-video/', views.generate_video, name='generate-video'),
     path('material/<int:material_id>/video-status/', views.check_video_status, name='check-video-status'),
-    
+    path('material/<int:material_id>/update-progress/', views.update_progress, name='update-progress'),
     
     # Teacher Routes
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher-dashboard'),
@@ -37,4 +37,7 @@ urlpatterns = [
     path('upload-material/', views.upload_material, name='upload-material'),
     # Progress Tracking (AJAX)
     path('progress/update/<int:material_id>/', views.update_progress, name='update-progress'),
+
+    path ('about/', views.about, name='about'),
+
 ]

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDAPTIV - AI Personalized Learning</title>
+    <title>EDAPTIV - Learning That Adapts To You</title>
     <style>
         * {
             margin: 0;
@@ -13,31 +13,49 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
+            overflow-x: hidden;
         }
 
+        /* Navbar */
         .navbar {
-            background: rgba(255, 255, 255, 0.95);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(26, 32, 96, 0.95);
             backdrop-filter: blur(10px);
             padding: 1rem 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
             z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .footer{
+            position: flexible;
+            bottom: 0;
+            width: 100%;
+            background: rgba(26, 32, 96, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
         }
 
         .logo {
-            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: white;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
         }
 
         .nav-links {
@@ -47,133 +65,206 @@
         }
 
         .nav-links a {
+            color: white;
             text-decoration: none;
-            color: #333;
             font-weight: 500;
-            transition: color 0.3s;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
         }
 
         .nav-links a:hover {
-            color: #667eea;
+            background: rgba(255,255,255,0.1);
         }
 
-        .btn {
-            padding: 0.8rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
+        .btn-get-started {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 0.8rem 1.5rem !important;
+            border-radius: 25px;
+            font-weight: 600;
         }
 
-        .btn-primary:hover {
+        .btn-get-started:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
+        /* Hero Section with Book Background */
         .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding-top: 80px;
+        }
+
+        /* Animated Gradient Background */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                #667eea 0%, 
+                #764ba2 25%,
+                #f093fb 50%,
+                #4facfe 75%,
+                #667eea 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -2;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Book Image Overlay */
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:rgba(102,126,234,0.3);stop-opacity:1" /><stop offset="100%" style="stop-color:rgba(118,75,162,0.3);stop-opacity:1" /></linearGradient></defs><rect width="400" height="600" x="400" y="100" rx="20" fill="url(%23grad)" transform="rotate(-15 600 400)"/><rect width="380" height="560" x="410" y="120" rx="15" fill="rgba(255,255,255,0.1)"/><line x1="450" y1="200" x2="750" y2="200" stroke="rgba(255,255,255,0.3)" stroke-width="3"/><line x1="450" y1="250" x2="750" y2="250" stroke="rgba(255,255,255,0.3)" stroke-width="3"/><line x1="450" y1="300" x2="750" y2="300" stroke="rgba(255,255,255,0.3)" stroke-width="3"/><line x1="450" y1="350" x2="700" y2="350" stroke="rgba(255,255,255,0.3)" stroke-width="3"/></svg>');
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(-8deg); }
+        }
+
+        .hero-content {
             text-align: center;
-            padding: 6rem 5% 4rem;
             color: white;
+            z-index: 1;
+            max-width: 900px;
+            padding: 2rem;
         }
 
-        .hero h1 {
+        .hero-title {
             font-size: 4rem;
+            font-weight: 800;
             margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.3);
             line-height: 1.2;
-            animation: fadeInUp 0.8s ease-out;
         }
 
-        .hero p {
+        .hero-subtitle {
             font-size: 1.5rem;
             margin-bottom: 3rem;
             opacity: 0.95;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+            font-weight: 300;
+            text-shadow: 1px 1px 10px rgba(0,0,0,0.3);
         }
 
         .hero-buttons {
             display: flex;
             gap: 1.5rem;
             justify-content: center;
-            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+            flex-wrap: wrap;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .btn-hero {
+            padding: 1.2rem 2.5rem;
+            font-size: 1.1rem;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
 
+        .btn-primary-hero {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary-hero {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+        }
+
+        .btn-secondary-hero:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+        }
+
+        /* Stats Section */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
-            padding: 3rem 5%;
             max-width: 1200px;
-            margin: 0 auto;
+            margin: -80px auto 0;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 10;
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
+            background: white;
+            padding: 2.5rem;
             border-radius: 20px;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            transition: all 0.3s;
         }
 
         .stat-card:hover {
             transform: translateY(-10px);
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.3);
         }
 
         .stat-number {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
             color: #666;
-            margin-top: 0.5rem;
             font-size: 1.1rem;
+            font-weight: 500;
         }
 
+        /* Features Section */
         .features {
-            padding: 4rem 5%;
-            background: white;
+            padding: 8rem 5% 5rem;
+            background: #f5f7fa;
         }
 
-        .section-title {
-            text-align: center;
-            font-size: 3rem;
-            margin-bottom: 3rem;
-            color: #333;
+        .feature-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 2.5rem;
+            border-radius: 20px;
+            transition: all 0.3s;
         }
 
         .features-grid {
@@ -182,13 +273,6 @@
             gap: 2rem;
             max-width: 1200px;
             margin: 0 auto;
-        }
-
-        .feature-card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 2.5rem;
-            border-radius: 20px;
-            transition: all 0.3s;
         }
 
         .feature-card:hover {
@@ -230,65 +314,145 @@
             opacity: 0.95;
         }
 
-        footer {
-            background: #2d3748;
-            color: white;
+        .section-title {
             text-align: center;
-            padding: 2rem 5%;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
         }
 
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 4rem;
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: -10px;
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 100%;
+                opacity: 0;
+            }
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 1s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 3s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 2.5s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 4.5s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 1.5s; }
+
         @media (max-width: 768px) {
-            .hero h1 {
+            .hero-title {
                 font-size: 2.5rem;
             }
 
-            .hero p {
+            .hero-subtitle {
                 font-size: 1.2rem;
             }
 
-            .hero-buttons {
-                flex-direction: column;
+            .stats {
+                margin-top: 2rem;
             }
 
             .nav-links {
-                display: none;
+                display: none; /* Add hamburger menu here */
             }
         }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">🎓 EDAPTIV</div>
+        <div class="logo">
+            <span class="logo-icon">🎓</span>
+            <span>EDAPTIV</span>
+        </div>
         <div class="nav-links">
             <a href="{% url 'login' %}">Login</a>
-            <a href="{% url 'register-choice' %}" class="btn btn-primary">Get Started</a>
+            <a href="{% url 'register-choice' %}" class="btn-get-started">Get Started</a>
+            <a href="{% url 'about' %}">About</a>
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero">
-        <h1>Learning That Adapts To You</h1>
-        <p>AI-powered personalized education for every learning style and challenge</p>
-        <div class="hero-buttons">
-            <a href="{% url 'register-student' %}" class="btn btn-primary">I'm a Student</a>
-            <a href="{% url 'register-teacher' %}" class="btn btn-secondary">I'm a Teacher</a>
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
         </div>
-    </section>
 
-    <section class="stats">
-        <div class="stat-card">
-            <div class="stat-number">{{ total_students|default:"0" }}</div>
-            <div class="stat-label">Active Students</div>
+        <div class="hero-content">
+            <h1 class="hero-title">Learning That Adapts To You</h1>
+            <p class="hero-subtitle">
+                AI-powered personalized education for your learning style and challenges
+            </p>
+            <div class="hero-buttons">
+                <a href="{% url 'register-choice' %}" class="btn-hero btn-primary-hero">
+                    I'm a Student
+                </a>
+                <a href="{% url 'register-choice' %}" class="btn-hero btn-secondary-hero">
+                    I'm a Teacher
+                </a>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ total_teachers|default:"0" }}</div>
-            <div class="stat-label">Active Teachers</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ total_institutions|default:"0" }}</div>
-            <div class="stat-label">Active Institutions</div>
-        </div>
-    </section>
+    
 
+        <!-- Stats Section -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_students }}</div>
+                <div class="stat-label">Active Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_teachers }}</div>
+                <div class="stat-label">Active Teachers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_materials }}</div>
+                <div class="stat-label">Active Institutions</div>
+            </div>
+        </div>
+    </section> 
+
+    <!-- Features Section -->
     <section class="features">
         <h2 class="section-title">Why Choose EDAPTIV?</h2>
         <div class="features-grid">
@@ -300,7 +464,7 @@
             <div class="feature-card">
                 <div class="feature-icon">♿</div>
                 <h3>Inclusive Education</h3>
-                <p>Specialized accommodations for learners with dyslexia, ADHD, autism, and other learning differences.</p>
+                <p>Specialized accommodations for learners with dyslexia, ADHD, autism.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🤖</div>
@@ -324,15 +488,20 @@
             </div>
         </div>
     </section>
-
+        
     <section class="cta">
         <h2>Ready to Transform Your Learning?</h2>
         <p>Join thousands of students experiencing personalized education</p>
         <a href="{% url 'register-choice' %}" class="btn btn-secondary">Start Learning Today</a>
     </section>
 
-    <footer>
+    <footer class="footer">
         <p>&copy; 2025 EDAPTIV - AI Personalized Tutor | Created by Karabo Nkurunziza</p>
     </footer>
+
+
+
+
+
 </body>
 </html>

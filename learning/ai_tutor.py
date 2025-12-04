@@ -67,6 +67,9 @@ def adapt_for_visual_learner(content: str) -> Dict[str, str]:
 • Use color coding for different themes
 • Watch related videos or animations
 • Create flashcards with images
+• Display charts or graphs to visualize data
+• Highlight important text with different colors
+
 """
     
     return {
@@ -296,9 +299,8 @@ def adapt_for_autism(content: str) -> str:
 # -------------------------
 
 def adapt_content_for_student(material: StudyMaterial, user: User) -> AdaptedContent:
-    """
-    Main function to adapt content based on student's profile
-    """
+    """Generate adapted content using Kimi K2"""
+    
     try:
         profile = user.student_profile
     except:
@@ -307,39 +309,29 @@ def adapt_content_for_student(material: StudyMaterial, user: User) -> AdaptedCon
     # Extract original content
     original_text = extract_text_from_material(material)
     
-    # Start with original text
-    adapted_text = original_text
-    adaptation_notes = []
+    # Get student details
+    learning_style = profile.learning_style.name if profile.learning_style else 'visual'
+    challenges = [c.name for c in profile.challenges.all()]
     
-    # Apply learning style adaptation
-    learning_style = profile.learning_style
-    if learning_style:
-        if learning_style.name == 'visual':
-            result = adapt_for_visual_learner(adapted_text)
-        elif learning_style.name == 'auditory':
-            result = adapt_for_auditory_learner(adapted_text)
-        elif learning_style.name == 'kinesthetic':
-            result = adapt_for_kinesthetic_learner(adapted_text)
-        elif learning_style.name == 'reading_writing':
-            result = adapt_for_reading_writing_learner(adapted_text)
-        else:
-            result = {'adapted_text': adapted_text, 'notes': 'No specific learning style adaptation'}
-        
-        adapted_text = result['adapted_text']
-        adaptation_notes.append(result['notes'])
+    # Generate script with Kimi
+    from utils.kimi_integration import KimiAdapter
     
-    # Apply challenge-specific adaptations
-    challenges = profile.challenges.all()
-    for challenge in challenges:
-        if 'dyslexia' in challenge.name.lower():
-            adapted_text = adapt_for_dyslexia(adapted_text)
-            adaptation_notes.append('Applied dyslexia accommodations')
-        elif 'adhd' in challenge.name.lower():
-            adapted_text = adapt_for_adhd(adapted_text)
-            adaptation_notes.append('Applied ADHD accommodations')
-        elif 'autism' in challenge.name.lower():
-            adapted_text = adapt_for_autism(adapted_text)
-            adaptation_notes.append('Applied autism accommodations')
+    kimi = KimiAdapter()
+    result = kimi.generate_script(
+        original_content=original_text,
+        learning_style=learning_style,
+        challenges=challenges,
+        student_name=user.first_name,
+        subject=material.subject
+    )
+    
+    if result['success']:
+        adapted_text = result['teaching_script']
+        adaptation_notes = f"Generated with Kimi K2 for {learning_style} learner"
+    else:
+        # Fallback to basic adaptation
+        adapted_text = f"Hi {user.first_name}! Let me teach you about {material.title}. {original_text[:500]}"
+        adaptation_notes = "Used fallback script"
     
     # Create or update adapted content
     adapted_content, created = AdaptedContent.objects.update_or_create(
@@ -347,126 +339,126 @@ def adapt_content_for_student(material: StudyMaterial, user: User) -> AdaptedCon
         student=user,
         defaults={
             'adapted_text': adapted_text,
-            'adaptation_notes': ' | '.join(adaptation_notes),
-            'applied_learning_style': learning_style,
+            'adaptation_notes': adaptation_notes,
+            'applied_learning_style': profile.learning_style,
         }
     )
     
     # Add challenges
-    if challenges:
-        adapted_content.applied_challenges.set(challenges)
+    if profile.challenges.exists():
+        adapted_content.applied_challenges.set(profile.challenges.all())
     
     return adapted_content
 
 
-################# THE VIDEO GENERATION #####################
-"""
-we shall collect the following
-1 studentdetails
-     1 learning style
-     2 challenges
-2 get the study material
-3 aggreagte the student details and teh teaching material
-4 generate the video using the aggregated data
+# ################# THE VIDEO GENERATION #####################
+# """
+# we shall collect the following
+# 1 studentdetails
+#      1 learning style
+#      2 challenges
+# 2 get the study material
+# 3 aggreagte the student details and teh teaching material
+# 4 generate the video using the aggregated data
 
 
-for this, we need to access the student model and collect student.lrearning_style 
-and student.challenges
-to get the learning material from study_material.adapted_content 
-the join them as the aggreagtae data and pass to deepsek to create the adapted laerning materioal for the 
-specific student
-we then pass the adapted material created by deeepsek to the video generation module 
-to create the video
+# for this, we need to access the student model and collect student.lrearning_style 
+# and student.challenges
+# to get the learning material from study_material.adapted_content 
+# the join them as the aggreagtae data and pass to deepsek to create the adapted laerning materioal for the 
+# specific student
+# we then pass the adapted material created by deeepsek to the video generation module 
+# to create the video
 
-we shall prompt deepseeek to generate the timed stamped script for the video generation and pick the
- script for video generation of two minutes each in a loop and generate the video accordingly.
+# we shall prompt deepseeek to generate the timed stamped script for the video generation and pick the
+#  script for video generation of two minutes each in a loop and generate the video accordingly.
 
-we shal then show the first two minutes to the student as we generate the next two minutes of teh video 
+# we shal then show the first two minutes to the student as we generate the next two minutes of teh video 
 
 
-"""
-def collect_student_details(user: User) -> Dict:
-    """
-    Collect student details including learning style and challenges
-    """
-    try:
-        profile = user.student_profile
-    except:
-        return {}
+# """
+# ###def collect_student_details(user: User) -> Dict:
+#     """
+#     Collect student details including learning style and challenges
+#     """
+#     try:
+#         profile = user.student_profile
+#     except:
+#         return {}
     
-    learning_style = profile.learning_style.name if profile.learning_style else None
-    challenges = [challenge.name for challenge in profile.challenges.all()]
+#     learning_style = profile.learning_style.name if profile.learning_style else None
+#     challenges = [challenge.name for challenge in profile.challenges.all()]
     
-    return {
-        'learning_style': learning_style,
-        'challenges': challenges
-    }
-def get_study_material(material: StudyMaterial) -> str:
-    """
-    Get the study material content
-    get the study material from the model StudyMaterial.adapted_content
-    """
-    return extract_text_from_material(StudyMaterial.adapted_content)
+#     return {
+#         'learning_style': learning_style,
+#         'challenges': challenges
+#     }
+# def get_study_material(material: StudyMaterial) -> str:
+#     """
+#     Get the study material content
+#     get the study material from the model StudyMaterial.adapted_content
+#     """
+#     return extract_text_from_material(StudyMaterial.adapted_content)
 
-def aggregate_data(user: User, material: StudyMaterial) -> Dict:    
-    """
-    Aggregate student details and study material
-    """
-    student_details = collect_student_details(user)
-    study_material = get_study_material(material)
+# def aggregate_data(user: User, material: StudyMaterial) -> Dict:    
+#     """
+#     Aggregate student details and study material
+#     """
+#     student_details = collect_student_details(user)
+#     study_material = get_study_material(material)
     
-    return {
-        'student_details': student_details,
-        'study_material': study_material
-    }
+#     return {
+#         'student_details': student_details,
+#         'study_material': study_material
+#     }
 
-def generate_video_script(aggregated_data: Dict) -> str:    
-    """
-    Generate a timed script for video generation using DeepSeek
-    """
-    # Placeholder for DeepSeek API call
-    # In real implementation, this would involve sending aggregated_data to DeepSeek and receiving the script
-    script = f"Video Script based on {aggregated_data['student_details']} and material: {aggregated_data['study_material'][:100]}..."
-    return script
+# def generate_video_script(aggregated_data: Dict) -> str:    
+#     """
+#     Generate a timed script for video generation using DeepSeek
+#     """
+#     # Placeholder for DeepSeek API call
+#     # In real implementation, this would involve sending aggregated_data to DeepSeek and receiving the script
+#     script = f"Video Script based on {aggregated_data['student_details']} and material: {aggregated_data['study_material'][:100]}..."
+#     return script
 
-def generate_learning_video(user: User, material: StudyMaterial) -> str:    
-    """
-    Main function to generate learning video for the student
-    """
-    aggregated_data = aggregate_data(user, material)
-    video_script = generate_video_script(aggregated_data)
+# def generate_learning_video(user: User, material: StudyMaterial) -> str:    
+#     """
+#     Main function to generate learning video for the student
+#     """
+#     aggregated_data = aggregate_data(user, material)
+#     video_script = generate_video_script(aggregated_data)
     
-    # Placeholder for video generation logic
-    # In real implementation, this would involve using the script to create a video file
-    video_file_path = f"/path/to/generated/video_for_{user.id}.mp4"
+#     # Placeholder for video generation logic
+#     # In real implementation, this would involve using the script to create a video file
+#     video_file_path = f"/path/to/generated/video_for_{user.id}.mp4"
     
-    return video_file_path
+#     return video_file_path
 
-def deepseek_generate_script(aggregated_data: Dict) -> str:
-    #kimi k2 model from openrouter
-    api_key = "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"
+# def deepseek_generate_script(aggregated_data: Dict) -> str:
+#     #kimi k2 model from openrouter
+#     api_key = "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"
     
 
-    client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key="<OPENROUTER_API_KEY>",
-    )
+#     client = OpenAI(
+#     base_url="https://openrouter.ai/api/v1",
+#     api_key="<OPENROUTER_API_KEY>",
+#     )
 
-    completion = client.chat.completions.create(
-    extra_headers={
-        "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
-        "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
-    },
-    extra_body={},
-    model="moonshotai/kimi-k2:free",
-    messages=[
-                {
-                    "role": "user",
-                    "content": script = f"Generated Script based on {aggregated_data['student_details']} and material: {aggregated_data['study_material'][:100]}..."
-                }
-                ]
-    )
-    return completion.choices[0].message.content
-# we now generate the learning video using the deepseek generated script as prompt to the DID API
-# the DID 
+#     completion = client.chat.completions.create(
+#     extra_headers={
+#         "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
+#         "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
+#     },
+#     extra_body={},
+#     model="moonshotai/kimi-k2:free",
+#     messages=[
+#                 {
+#                     "role": "user",
+#                     "content": script = f"Generated Script based on {aggregated_data['student_details']} and material: {aggregated_data['study_material'][:100]}..."
+#                 }
+#                 ]
+#     )
+#     return completion.choices[0].message.content
+# # we now generate the learning video using the deepseek generated script as prompt to the DID API
+# # the DID 
     

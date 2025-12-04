@@ -34,6 +34,10 @@ def home_view(request):
     
     return render(request, 'home.html', context) 
 
+
+def about(request):
+    return render(request, 'about.html')
+
 # -------------------------
 # Registration Views
 # -------------------------
@@ -77,7 +81,7 @@ def student_materials(request):
     grade_level = student_profile.grade_level
 
     # Start with materials from the same institution
-    materials = StudyMaterial.objects.filter(institution=institution)
+    materials = StudyMaterial.objects.filter(user=request.user)
 
     # Filter for materials matching class group OR grade level
     materials = materials.filter(
@@ -172,9 +176,12 @@ def student_dashboard(request):
     
     # Get recommended materials based on student's profile
     recommended_materials = StudyMaterial.objects.filter(
-        Q(target_learning_styles=profile.learning_style) |
-        Q(target_challenges__in=profile.challenges.all())
-    ).distinct()[:6]
+    Q(target_learning_styles=profile.learning_style) |
+    Q(target_challenges__in=profile.challenges.all()) |
+    Q(target_learning_styles__isnull=True) |
+    Q(target_challenges__isnull=True)
+).distinct()[:6]
+
     
     # Get student's progress
     progress = StudentProgress.objects.filter(student=request.user).select_related('material')
@@ -204,20 +211,37 @@ def student_dashboard(request):
 # -------------------------
 @login_required
 def teacher_dashboard(request):
-    try:
-        profile = request.user.teacher_profile
-    except TeacherProfile.DoesNotExist:
-        messages.error(request, 'Teacher profile not found.')
+    """Teacher Dashboard - Fixed Version"""
+    
+    # Check if user has teacher profile
+    if not hasattr(request.user, 'teacher_profile'):
+        messages.error(request, 'Teacher profile not found. Please contact administrator.')
         return redirect('home')
     
-    # Get materials uploaded by this teacher
-    materials = StudyMaterial.objects.filter(uploaded_by=request.user).order_by('-uploaded_at')
+    try:
+        profile = request.user.teacher_profile
+    except Exception as e:
+        messages.error(request, f'Error loading teacher profile: {str(e)}')
+        return redirect('home')
     
-    # Get statistics
+    # Get materials uploaded by THIS USER (not profile)
+    materials = StudyMaterial.objects.filter(
+        uploaded_by=request.user  # Use request.user, NOT profile
+    ).order_by('-uploaded_at')
+    
+    # Count total materials
     total_materials = materials.count()
+    
+    # Count unique students who accessed these materials
+    # Use request.user, NOT profile
     total_students_reached = StudentProgress.objects.filter(
         material__uploaded_by=request.user
     ).values('student').distinct().count()
+    
+    # Debug prints (remove these later)
+    print(f"👤 Teacher: {request.user.username}")
+    print(f"📚 Materials: {total_materials}")
+    print(f"👨‍🎓 Students reached: {total_students_reached}")
     
     context = {
         'profile': profile,
@@ -227,7 +251,6 @@ def teacher_dashboard(request):
     }
     
     return render(request, 'teacher_dashboard.html', context)
-
 
 # -------------------------
 # Study Materials
@@ -262,13 +285,12 @@ def materials_view(request):
 
     return render(request, "materials_library.html", {"materials": materials})
 
-
 @login_required
 def material_detail(request, material_id):
-    """View a specific study material with AI avatar video"""
+    """View a specific study material"""
     material = get_object_or_404(StudyMaterial, id=material_id)
     
-    # Progress for the student
+    # Get or create progress for this student
     progress = None
     adapted_content = None
     
@@ -278,56 +300,15 @@ def material_detail(request, material_id):
             material=material
         )
         
-        student_profile = request.user.student_profile
-        
-        # Step 1: Check if adapted content already exists for this student
+        # Check if adapted content exists, if not trigger AI adaptation
         try:
             adapted_content = AdaptedContent.objects.get(
                 original_material=material,
                 student=request.user
             )
-            
-            # If video doesn't exist, try to generate it
-            if not adapted_content.video_url or adapted_content.video_generation_status == 'failed':
-                # First, check if another student with same preferences has a video
-                matching_content = AdaptedContent.find_matching_video(
-                    material=material,
-                    learning_style=student_profile.learning_style,
-                    challenges=student_profile.challenges.all()
-                )
-                
-                if matching_content:
-                    # Reuse existing video!
-                    adapted_content.video_url = matching_content.video_url
-                    adapted_content.video_talk_id = matching_content.video_talk_id
-                    adapted_content.video_duration = matching_content.video_duration
-                    adapted_content.video_generation_status = 'ready'
-                    adapted_content.video_generated_at = matching_content.video_generated_at
-                    adapted_content.save()
-                    
-                    messages.success(request, '🎥 Video loaded from cache!')
-                
         except AdaptedContent.DoesNotExist:
-            # Create new adapted content
+            # Trigger AI adaptation
             adapted_content = adapt_content_for_student(material, request.user)
-            
-            if adapted_content:
-                # Check for matching video from other students
-                matching_content = AdaptedContent.find_matching_video(
-                    material=material,
-                    learning_style=student_profile.learning_style,
-                    challenges=student_profile.challenges.all()
-                )
-                
-                if matching_content:
-                    adapted_content.video_url = matching_content.video_url
-                    adapted_content.video_talk_id = matching_content.video_talk_id
-                    adapted_content.video_duration = matching_content.video_duration
-                    adapted_content.video_generation_status = 'ready'
-                    adapted_content.video_generated_at = matching_content.video_generated_at
-                    adapted_content.save()
-                    
-                    messages.success(request, '🎥 Video loaded from cache!')
     
     context = {
         'material': material,
@@ -337,7 +318,7 @@ def material_detail(request, material_id):
     
     return render(request, 'material_detail.html', context)
 
-#New AJAX endpoint for video generation
+# Add this new AJAX endpoint for video generation
 @login_required
 def generate_video(request, material_id):
     """
@@ -353,6 +334,8 @@ def generate_video(request, material_id):
         return JsonResponse({'success': False, 'error': 'Student profile required'}, status=403)
     
     try:
+        student_profile = request.user.student_profile
+        
         # Get adapted content for this student
         adapted_content = AdaptedContent.objects.get(
             original_material=material,
@@ -376,15 +359,54 @@ def generate_video(request, material_id):
                 'message': 'Video is being generated, please wait...'
             })
         
+        # Check for cached video from other students
+        matching_content = AdaptedContent.find_matching_video(
+            material=material,
+            learning_style=student_profile.learning_style,
+            challenges=student_profile.challenges.all()
+        )
+        
+        if matching_content:
+            # Reuse existing video!
+            adapted_content.video_url = matching_content.video_url
+            adapted_content.video_talk_id = matching_content.video_talk_id
+            adapted_content.video_duration = matching_content.video_duration
+            adapted_content.video_generation_status = 'ready'
+            adapted_content.video_generated_at = matching_content.video_generated_at
+            adapted_content.save()
+            
+            return JsonResponse({
+                'success': True,
+                'video_url': adapted_content.video_url,
+                'status': 'ready',
+                'cached': True
+            })
+        
         # Mark as generating
         adapted_content.video_generation_status = 'generating'
         adapted_content.save()
         
+        # Get script from adapted content
+        script_text = adapted_content.adapted_text.strip()
+        
+        # Ensure script is not empty
+        if len(script_text) < 10:
+            # Fallback: use material description
+            script_text = f"Hello! Let me explain {material.title}. {material.description}"
+        
+        # Limit to 3000 characters for D-ID
+        if len(script_text) > 3000:
+            script_text = script_text[:2997] + "..."
+        
+        print(f"🎬 Generating video with script length: {len(script_text)}")
+        print(f"Script preview: {script_text[:200]}...")
+        
         # Generate video with D-ID
+        from utils.ai_integration import DIDVideoGenerator
         did = DIDVideoGenerator()
         video_result = did.create_video(
-            script=adapted_content.adapted_text[:3000],  # Limit to 3000 chars
-            subject=material.get_subject_display(),
+            script=script_text,
+            subject=material.subject,
             student_name=request.user.first_name
         )
         
@@ -429,99 +451,8 @@ def generate_video(request, material_id):
             'error': str(e)
         }, status=500)
 
-# New AJAX endpoint for video generation
-@login_required
-def generate_video(request, material_id):
-    """
-    AJAX endpoint to generate D-ID video for adapted content
-    Called from frontend after page loads
-    """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'POST required'}, status=400)
-    
-    material = get_object_or_404(StudyMaterial, id=material_id)
-    
-    if not hasattr(request.user, 'student_profile'):
-        return JsonResponse({'success': False, 'error': 'Student profile required'}, status=403)
-    
-    try:
-        # Get adapted content for this student
-        adapted_content = AdaptedContent.objects.get(
-            original_material=material,
-            student=request.user
-        )
-        
-        # Check if video already exists and is ready
-        if adapted_content.video_url and adapted_content.video_generation_status == 'ready':
-            return JsonResponse({
-                'success': True,
-                'video_url': adapted_content.video_url,
-                'status': 'ready',
-                'cached': True
-            })
-        
-        # Check if video is currently generating
-        if adapted_content.video_generation_status == 'generating':
-            return JsonResponse({
-                'success': True,
-                'status': 'generating',
-                'message': 'Video is being generated, please wait...'
-            })
-        
-        # Mark as generating
-        adapted_content.video_generation_status = 'generating'
-        adapted_content.save()
-        
-        # Generate video with D-ID
-        did = DIDVideoGenerator()
-        video_result = did.create_video(
-            script=adapted_content.adapted_text[:3000],  # Limit to 3000 chars
-            subject=material.get_subject_display(),
-            student_name=request.user.first_name
-        )
-        
-        if video_result['success']:
-            # Save video information
-            adapted_content.video_url = video_result['video_url']
-            adapted_content.video_talk_id = video_result.get('talk_id')
-            adapted_content.video_duration = video_result.get('duration', 0)
-            adapted_content.video_generation_status = 'ready'
-            adapted_content.video_generated_at = timezone.now()
-            adapted_content.video_error_message = None
-            adapted_content.save()
-            
-            return JsonResponse({
-                'success': True,
-                'video_url': video_result['video_url'],
-                'status': 'ready',
-                'duration': video_result.get('duration', 0),
-                'cached': False
-            })
-        else:
-            # Video generation failed
-            adapted_content.video_generation_status = 'failed'
-            adapted_content.video_error_message = video_result.get('error', 'Unknown error')
-            adapted_content.save()
-            
-            return JsonResponse({
-                'success': False,
-                'error': video_result.get('error', 'Video generation failed'),
-                'status': 'failed'
-            })
-            
-    except AdaptedContent.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Adapted content not found'
-        }, status=404)
-    
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
 
-# New view to check video status
+# Add this new view to check video status
 @login_required
 def check_video_status(request, material_id):
     """
@@ -560,10 +491,10 @@ def upload_material(request):
         form = StudyMaterialForm(request.POST, request.FILES)
         if form.is_valid():
             material = form.save(commit=False)
-            material.uploaded_by = request.user
-            material.institution=request.user.institution
+            material.uploaded_by = request.user  # Use request.user
+            material.institution = request.user.institution
             material.save()
-            form.save_m2m()  # Save many-to-many relationships
+            form.save_m2m()
             messages.success(request, f'Material "{material.title}" uploaded successfully!')
             return redirect('teacher-dashboard')
     else:
@@ -572,10 +503,16 @@ def upload_material(request):
     return render(request, 'upload_material.html', {'form': form})
 
 
+
 @login_required
 def edit_material(request, material_id):
     """Edit existing study material"""
-    material = get_object_or_404(StudyMaterial, id=material_id, uploaded_by=request.user)
+    # Use request.user, not profile
+    material = get_object_or_404(
+        StudyMaterial, 
+        id=material_id, 
+        uploaded_by=request.user  # Use request.user
+    )
     
     if request.method == 'POST':
         form = StudyMaterialForm(request.POST, request.FILES, instance=material)
@@ -592,7 +529,12 @@ def edit_material(request, material_id):
 @login_required
 def delete_material(request, material_id):
     """Delete study material"""
-    material = get_object_or_404(StudyMaterial, id=material_id, uploaded_by=request.user)
+    # Use request.user, not profile
+    material = get_object_or_404(
+        StudyMaterial, 
+        id=material_id, 
+        uploaded_by=request.user  # Use request.user
+    )
     
     if request.method == 'POST':
         material_title = material.title
@@ -601,8 +543,6 @@ def delete_material(request, material_id):
         return redirect('teacher-dashboard')
     
     return render(request, 'delete_material.html', {'material': material})
-
-
 # -------------------------
 # Student Profile Management
 # -------------------------

@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from config import settings 
 import random
@@ -201,7 +201,7 @@ class StudentProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True)
-
+    institution_code= models.CharField(max_length=50)
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
@@ -212,6 +212,7 @@ class StudentProfile(models.Model):
 class TeacherProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
     institution= models.ForeignKey(Institution, on_delete= models.CASCADE, related_name='teachers', null=True, blank=True)
+    institution_code= models.CharField(max_length=50)
     subject_specialization = models.CharField(max_length=200, blank=True)
     bio = models.TextField(blank=True)
     students = models.ManyToManyField('StudentProfile', blank=True, related_name='teachers')
@@ -249,6 +250,7 @@ class StudyMaterial(models.Model):
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_materials')
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='materials',null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    institution_code = models.CharField(max_length=50)
     class_group = models.ForeignKey(ClassGroup, on_delete=models.CASCADE, related_name='materials', null=True, blank=True)
     
     # Target audience
