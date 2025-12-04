@@ -34,7 +34,7 @@ SECRET_KEY = config('SECRET_KEY', default='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost, 127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS','localhost, 127.0.0.1',".onrender.com").split(',')
 
 
 # Application definition
@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'learning',
+    'whitenoise.runserver_nostatic', 
+    'django.contrib.staticfiles',
     
 ]
 #Custom user model
@@ -74,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -157,7 +160,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
