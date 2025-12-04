@@ -34,7 +34,10 @@ SECRET_KEY = config('SECRET_KEY', default='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS','localhost, 127.0.0.1',".onrender.com").split(',')
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,.onrender.com'
+    ).split(',')
 
 
 # Application definition
@@ -48,8 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'learning',
-    'whitenoise.runserver_nostatic', 
-    'django.contrib.staticfiles',
+    
+    
     
 ]
 #Custom user model
@@ -76,7 +79,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+     
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -165,3 +169,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com",
+    "https://edaptivai-netizen.github.io",
+    
+]
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+DID_API_KEY = os.getenv("DID_API_KEY", "")
+SUPABASE_URL = os.getenv("DATABASE_URL", "")
