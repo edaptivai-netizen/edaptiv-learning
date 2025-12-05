@@ -201,7 +201,7 @@ class StudentProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True)
-    institution_code= models.CharField(max_length=50)
+    institution_code= models.CharField(max_length=100, null=False, default='UNKNOWN')
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
