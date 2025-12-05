@@ -9,7 +9,8 @@ import requests
 from typing import Dict, Optional
 from dotenv import load_dotenv
 load_dotenv()
-
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 class DIDVideoGenerator:
     """D-ID API Integration for generating avatar videos"""
@@ -241,7 +242,8 @@ def wait_for_video(self, talk_id: str, max_wait: int = 180) -> Optional[str]:
                 # Upload to S3
                 s3_key = f"videos/{talk_id}.mp4"
                 try:
-                    s3_client.upload_file(temp_file, S3_BUCKET, s3_key, ExtraArgs={"ACL": "public-read"})
+                    print("Uploading video to S3...")
+                    s3_client.upload_file(temp_file, S3_BUCKET, s3_key, ExtraArgs={"ACL": "public-read", "ContentType": "video/mp4"})
                     s3_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
                     print(f"🎉 Video uploaded to S3: {s3_url}")
                 except (BotoCoreError, ClientError) as e:
