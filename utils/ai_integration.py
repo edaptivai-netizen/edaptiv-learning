@@ -179,46 +179,91 @@ class DIDVideoGenerator:
                 'talk_id': None
             }
     
-    def wait_for_video(self, talk_id: str, max_wait: int = 180) -> Optional[str]:
-        """Poll D-ID API until video is ready"""
-        
-        start_time = time.time()
-        poll_interval = 5
-        
-        while time.time() - start_time < max_wait:
-            try:
-                response = requests.get(
-                    f"{self.base_url}/talks/{talk_id}",
-                    headers=self.get_headers()
-                )
-                response.raise_for_status()
-                
-                result = response.json()
-                status = result.get('status')
-                
-                elapsed = int(time.time() - start_time)
-                print(f"⏱️ Status: {status} ({elapsed}s)")
-                
-                if status == 'done':
-                    return result.get('result_url')
-                elif status == 'error':
-                    error = result.get('error', 'Unknown')
-                    print(f"❌ Generation failed: {error}")
-                    return None
-                elif status in ['created', 'started']:
-                    time.sleep(poll_interval)
-                else:
-                    print(f"⚠️ Unknown status: {status}")
-                    time.sleep(poll_interval)
-                
-            except Exception as e:
-                print(f"❌ Polling error: {e}")
-                return None
-        
-        print(f"⏰ Timeout after {max_wait}s")
-        return None
+    import os
+import time
+import requests
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+from typing import Optional
+
+# Retrieve AWS configuration from environment variables
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_DEFAULT_REGION") 
+S3_BUCKET = os.getenv("AWS_STORAGE_BUCKET_NAME")
+
+# Configure AWS S3 client
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
+)
+
+def wait_for_video(self, talk_id: str, max_wait: int = 180) -> Optional[str]:
+    """Poll D-ID API until video is ready, upload to AWS S3, and return permanent URL"""
     
-    def get_video_info(self, talk_id: str) -> Dict:
+    start_time = time.time()
+    poll_interval = 5
+
+    while time.time() - start_time < max_wait:
+        try:
+            response = requests.get(
+                f"{self.base_url}/talks/{talk_id}",
+                headers=self.get_headers()
+            )
+            response.raise_for_status()
+            
+            result = response.json()
+            status = result.get('status')
+            elapsed = int(time.time() - start_time)
+            print(f"⏱ Status: {status} ({elapsed}s)")
+
+            if status == 'done':
+                result_url = result.get("result_url")
+                if not result_url:
+                    print("❌ No result URL returned")
+                    return None
+                
+                # Download the video temporarily
+                print("📥 Downloading video from D-ID...")
+                video_data = requests.get(result_url)
+                if video_data.status_code != 200:
+                    print(f"❌ Failed to download video: {video_data.status_code}")
+                    return None
+
+                temp_file = f"/tmp/{talk_id}.mp4"
+                with open(temp_file, "wb") as f:
+                    f.write(video_data.content)
+
+                # Upload to S3
+                s3_key = f"videos/{talk_id}.mp4"
+                try:
+                    s3_client.upload_file(temp_file, S3_BUCKET, s3_key, ExtraArgs={"ACL": "public-read"})
+                    s3_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
+                    print(f"🎉 Video uploaded to S3: {s3_url}")
+                except (BotoCoreError, ClientError) as e:
+                    print(f"❌ S3 upload failed: {e}")
+                    return None
+                finally:
+                    os.remove(temp_file)
+
+                return s3_url  # Permanent URL
+
+            elif status == 'error':
+                print(f"❌ Error: {result.get('error', 'Unknown')}")
+                return None
+            
+            time.sleep(poll_interval)
+
+        except Exception as e:
+            print(f"❌ Polling error: {e}")
+            time.sleep(poll_interval)
+
+    print(f"⏰ Timeout after {max_wait}s")
+    return None
+
+def get_video_info(self, talk_id: str) -> Dict:
         """Get video information"""
         try:
             response = requests.get(
