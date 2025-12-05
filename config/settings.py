@@ -37,6 +37,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'learning',
+    'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'learning.User'
@@ -55,12 +56,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 # -------------------------------------------------
 # TEMPLATES

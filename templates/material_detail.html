@@ -403,6 +403,34 @@
     </div>
 
     <script>
+        
+    // --- BASE / CSRF SETUP (paste near top of your script) ---
+    // Ensure API base is the current site origin (works both local and on Render)
+    window.API_BASE = window.location.origin;
+
+    // CSRF helper (returns the csrftoken cookie)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Ensure fetch sends cookies (so session and CSRF cookie are sent)
+    const defaultFetchOptions = {
+        credentials: 'include'   // IMPORTANT: allows Django session cookie + CSRF cookie to be sent
+    };
+    // --- end base/csrf setup ---
+
         let timeSpent = {{ progress.time_spent_minutes|default:0 }};
         let startTime = Date.now();
         let generationStartTime = Date.now();
@@ -437,60 +465,57 @@
         });
 
         function generateVideo() {
-            console.log('🎬 Starting video generation...');
-            
-            fetch('{% url "generate-video" material.id %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Video generation response:', data);
-                
-                if (data.success && data.status === 'ready') {
-                    // Video is ready!
-                    displayVideo(data.video_url, data.cached);
-                } else if (data.status === 'generating') {
-                    // Video is still generating, poll for status
-                    document.getElementById('loading-message').textContent = 
-                        'Your video is being generated. This may take 60-90 seconds...';
-                    pollVideoStatus();
-                } else if (data.success === false) {
-                    // Error
-                    displayError(data.error || 'Failed to generate video');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                displayError('Network error. Please refresh the page.');
-            });
+    console.log('🎬 Starting video generation...');
+    
+    fetch(${window.API_BASE}{% url "generate-video" material.id %}, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        credentials: 'include'   // send cookies
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Video generation response:', data);
+        if (data.success && data.status === 'ready') {
+            displayVideo(data.video_url, data.cached);
+        } else if (data.status === 'generating') {
+            document.getElementById('loading-message').textContent =
+                'Your video is being generated. This may take 60-90 seconds...';
+            pollVideoStatus();
+        } else if (data.success === false) {
+            displayError(data.error || 'Failed to generate video');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        displayError('Network error. Please refresh the page.');
+    });
+}
 
         function pollVideoStatus() {
-            // Check video status every 5 seconds
-            videoGenerationInterval = setInterval(() => {
-                fetch('{% url "check-video-status" material.id %}')
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Video status:', data.status);
-                        
-                        if (data.status === 'ready' && data.video_url) {
-                            clearInterval(videoGenerationInterval);
-                            displayVideo(data.video_url, false);
-                        } else if (data.status === 'failed') {
-                            clearInterval(videoGenerationInterval);
-                            displayError(data.error || 'Video generation failed');
-                        }
-                        // If still generating, keep polling
-                    })
-                    .catch(error => {
-                        console.error('Polling error:', error);
-                    });
-            }, 5000); // Poll every 5 seconds
-        }
+    videoGenerationInterval = setInterval(() => {
+        fetch(${window.API_BASE}{% url "check-video-status" material.id %}, {
+            method: 'GET',
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Video status:', data.status);
+            if (data.status === 'ready' && data.video_url) {
+                clearInterval(videoGenerationInterval);
+                displayVideo(data.video_url, false);
+            } else if (data.status === 'failed') {
+                clearInterval(videoGenerationInterval);
+                displayError(data.error || 'Video generation failed');
+            }
+        })
+        .catch(error => {
+            console.error('Polling error:', error);
+        });
+    }, 5000);
+}
 
         function displayVideo(videoUrl, cached) {
             const wrapper = document.getElementById('video-container-wrapper');
@@ -531,29 +556,34 @@
         {% endif %}
 
         function updateProgress(amount) {
-            const currentProgress = parseInt(document.getElementById('progress-value').textContent);
-            const newProgress = Math.min(100, currentProgress + amount);
-            
-            fetch('{% url "update-progress" material.id %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: `completion_percentage=${newProgress}&time_spent=${timeSpent}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('progress-value').textContent = data.completion + '%';
-                    document.getElementById('progress-bar').style.width = data.completion + '%';
-                    
-                    if (data.completion === 100) {
-                        alert('🎉 Congratulations! You completed this material!');
-                    }
-                }
-            });
+    const currentProgress = parseInt(document.getElementById('progress-value').textContent);
+    const newProgress = Math.min(100, currentProgress + amount);
+
+    const body = new URLSearchParams();
+    body.append('completion_percentage', newProgress);
+    body.append('time_spent', timeSpent);
+
+    fetch(${window.API_BASE}{% url "update-progress" material.id %}, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        },
+        credentials: 'include',
+        body: body.toString()
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('progress-value').textContent = data.completion + '%';
+            document.getElementById('progress-bar').style.width = data.completion + '%';
+            if (data.completion === 100) {
+                alert('🎉 Congratulations! You completed this material!');
+            }
         }
+    });
+}
+
 
         function markComplete() {
             updateProgress(100 - parseInt(document.getElementById('progress-value').textContent));
