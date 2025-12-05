@@ -7,6 +7,8 @@ import os
 import time
 import requests
 from typing import Dict, Optional
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class DIDVideoGenerator:
@@ -179,7 +181,7 @@ class DIDVideoGenerator:
                 'talk_id': None
             }
     
-    import os
+    
 import time
 import requests
 import boto3
