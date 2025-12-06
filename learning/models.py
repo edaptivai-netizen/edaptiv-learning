@@ -291,6 +291,9 @@ class AdaptedContent(models.Model):
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='adapted_content', null=True, blank=True)
 
     video_url = models.URLField(max_length=500, blank=True, null=True, help_text="D-ID generated video URL")
+
+    video_s3_key = models.CharField(max_length=500, blank=True, null=True)
+
     video_talk_id = models.CharField(max_length=100, blank=True, null=True, help_text="D-ID talk ID for reference")
     video_generated_at = models.DateTimeField(null=True, blank=True, help_text="When video was generated")
     video_duration = models.FloatField(null=True, blank=True, help_text="Video duration in seconds")
@@ -306,7 +309,7 @@ class AdaptedContent(models.Model):
     )
     video_error_message = models.TextField(blank=True, null=True, help_text="Error if video generation failed")
 
-
+    
 
 
     def save(self, *args, **kwargs):

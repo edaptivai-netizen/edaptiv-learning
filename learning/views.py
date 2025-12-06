@@ -15,6 +15,7 @@ from learning import models
 from django.utils import timezone
 from utils.ai_integration import DIDVideoGenerator
 import json
+from utils.s3 import generate_presigned_url
 
 
 #-----------
@@ -296,6 +297,7 @@ def materials_view(request):
 
 @login_required
 def material_detail(request, material_id):
+    
     """View a specific study material"""
     material = get_object_or_404(StudyMaterial, id=material_id)
     
@@ -320,11 +322,19 @@ def material_detail(request, material_id):
             # Trigger AI adaptation
             adapted_content = adapt_content_for_student(material, request.user)
     
+    # Generate fresh temporary URL for video if available
+    if adapted_content and adapted_content.video_s3_key:
+        video_url = generate_presigned_url(adapted_content.video_s3_key)
+    else:
+        video_url = None
+
     context = {
-        'material': material,
-        'progress': progress,
-        'adapted_content': adapted_content,
-    }
+    'material': material,
+    'progress': progress,
+    'adapted_content': adapted_content,
+    'video_url': video_url,  # <-- IMPORTANT
+}
+
     
     return render(request, 'material_detail.html', context)
 
@@ -422,44 +432,30 @@ def generate_video(request, material_id):
         
         if video_result['success']:
             # Save video information
-            adapted_content.video_url = video_result['video_url']
-            adapted_content.video_talk_id = video_result.get('talk_id')
-            adapted_content.video_duration = video_result.get('duration', 0)
-            adapted_content.video_generation_status = 'ready'
-            adapted_content.video_generated_at = timezone.now()
-            adapted_content.video_error_message = None
-            adapted_content.save()
-            
-            return JsonResponse({
-                'success': True,
-                'video_url': video_result['video_url'],
-                'status': 'ready',
-                'duration': video_result.get('duration', 0),
-                'cached': False
-            })
-        else:
-            # Video generation failed
-            adapted_content.video_generation_status = 'failed'
-            adapted_content.video_error_message = video_result.get('error', 'Unknown error')
-            adapted_content.save()
-            
-            return JsonResponse({
-                'success': False,
-                'error': video_result.get('error', 'Video generation failed'),
-                'status': 'failed'
-            })
-            
-    except AdaptedContent.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Adapted content not found'
-        }, status=404)
-    
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+            import uuid
+import boto3
+from django.conf import settings
+
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    region_name=settings.AWS_S3_REGION_NAME,
+)
+
+# Generate unique key
+filename = f"videos/{material.id}_{uuid.uuid4().hex[:8]}.mp4"
+
+# Upload binary video content
+s3.put_object(
+    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+    Key=filename,
+    Body=video_result['video_content'],
+    ContentType="video/mp4"
+)
+
+# Save only key
+adapted_content.video_s3_key = filename
 
 
 # Add this new view to check video status
