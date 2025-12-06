@@ -44,4 +44,6 @@ urlpatterns = [
 
     path ('about/', views.about, name='about'),
 
+    path('api/check-video-status/', views.check_video_status, name='check_video_status'),
+
 ]
