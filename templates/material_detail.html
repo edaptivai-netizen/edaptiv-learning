@@ -327,29 +327,66 @@
             <h2 style="margin-bottom: 1rem;">🎥 Your Personal AI Tutor</h2>
             
             <div id="video-container-wrapper">
-                {% if adapted_content.video_url and adapted_content.video_generation_status == 'ready' %}
-                    <!-- Video is ready -->
-                    <div class="video-container">
-                        <video id="avatar-video" class="video-player" controls autoplay>
-                            <source src="{{ adapted_content.video_url }}" type="video/mp4">
-                            Your browser does not support video playback.
-                        </video>
-                    </div>
-                    <div class="video-info">
-                        ✅ Video ready! Your personalized AI tutor will guide you through this lesson.
-                    </div>
+
+    {# PRIORITY 1 — AvatarVideo stored in your server #}
+    {% if avatar_video %}
+        
+        {% if avatar_video.is_expired %}
+            <div class="alert alert-warning">
+                <h3>⚠ Video Expired</h3>
+                <p>This video was generated on {{ avatar_video.created_at|date:"M d, Y" }} and has expired.</p>
+                <p>Please contact your teacher to regenerate the video.</p>
+            </div>
+
+        {% else %}
+            <div class="video-container">
+                <video class="video-player" controls autoplay controlsList="nodownload">
+                    <source src="{{ avatar_video.get_video_url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <div class="video-info">
+                <p>🎬 <strong>Your Personal AI Tutor</strong></p>
+                <p>Teacher: {{ avatar_video.avatar_name }}</p>
+                <p>Duration: {{ avatar_video.duration }} seconds</p>
+
+                {% if avatar_video.video_file %}
+                    <p>📁 Stored permanently</p>
                 {% else %}
-                    <!-- Video needs to be generated -->
-                    <div id="video-loading" class="video-loading">
-                        <div class="spinner"></div>
-                        <h3>🎬 Generating Your Personal AI Tutor...</h3>
-                        <p id="loading-message">Please wait while we create your personalized video lesson. This takes about 60-90 seconds.</p>
-                        <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 1rem;">
-                            <span id="generation-timer">0</span> seconds elapsed
-                        </p>
-                    </div>
+                    <p>⏳ Expires: {{ avatar_video.created_at|date:"M d, Y" }} (3 days)</p>
                 {% endif %}
             </div>
+        {% endif %}
+
+    {# PRIORITY 2 — D-ID generated URL saved in AdaptedContent #}
+    {% elif adapted_content.video_url and adapted_content.video_generation_status == 'ready' %}
+        
+        <div class="video-container">
+            <video id="avatar-video" class="video-player" controls autoplay>
+                <source src="{{ adapted_content.video_url }}" type="video/mp4">
+                Your browser does not support video playback.
+            </video>
+        </div>
+
+        <div class="video-info">
+            ✅ Video ready! Your personalized AI tutor will guide you through this lesson.
+        </div>
+
+    {# PRIORITY 3 — No video exists → show loading screen while JS calls generate_video API #}
+    {% else %}
+        <div id="video-loading" class="video-loading">
+            <div class="spinner"></div>
+            <h3>🎬 Generating Your Personal AI Tutor...</h3>
+            <p id="loading-message">Please wait while we create your personalized video lesson.  
+            This takes about 60-90 seconds.</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 1rem;">
+                <span id="generation-timer">0</span> seconds elapsed
+            </p>
+        </div>
+    {% endif %}
+
+        </div>
         </div>
         {% endif %}
 
