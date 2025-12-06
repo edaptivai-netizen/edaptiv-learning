@@ -15,11 +15,6 @@ from learning import models
 from django.utils import timezone
 from utils.ai_integration import DIDVideoGenerator
 import json
-from django.core.files.base import ContentFile
-import threading
-
-from .models import StudyMaterial, StudentProfile, AdaptedContent, AvatarVideo, StudentProgress
-from .video_generator import generate_video_background
 
 
 #-----------
@@ -301,114 +296,37 @@ def materials_view(request):
 
 @login_required
 def material_detail(request, material_id):
-    """
-    Material detail view with async video generation
-    """
-    
-    if request.user.user_type != 'student':
-        messages.error(request, "Only students can view materials.")
-        return redirect('home')
-    
+    """View a specific study material"""
     material = get_object_or_404(StudyMaterial, id=material_id)
-    student = get_object_or_404(StudentProfile, user=request.user)
     
-    learning_styles = student.learning_styles.all()
-    challenges = student.challenges.all()
+    # Get or create progress for this student
+    progress = None
+    adapted_content = None
     
-    # Create cache key
-    style_ids = ','.join(sorted([str(ls.id) for ls in learning_styles]))
-    challenge_ids = ','.join(sorted([str(c.id) for c in challenges]))
-    cache_key = f"{material.id}{style_ids}{challenge_ids}"
     
-    # Check for existing adapted content
-    adapted_content = AdaptedContent.objects.filter(
-        original_material=material,
-        cache_key=cache_key
-    ).first()
-    
-    video_status = 'none'
-    avatar_video = None
-    
-    if adapted_content:
-        # Check for video
-        avatar_video = AvatarVideo.objects.filter(
-            adapted_content=adapted_content
-        ).first()
+    if hasattr(request.user, 'student_profile'):
+        progress, created = StudentProgress.objects.get_or_create(
+            student=request.user,
+            material=material
+        )
         
-        if avatar_video:
-            video_status = avatar_video.status
-        else:
-            video_status = 'none'
-    else:
-        # Need to generate content AND video
-        video_status = 'generating'
-        
+        # Check if adapted content exists, if not trigger AI adaptation
         try:
-            # Import DeepSeek adapter
-            from utils.kimi_integration import adapt_content_for_student
-            
-            # Adapt content with DeepSeek (this is fast - 5-10 seconds)
-            print(f"🤖 Adapting content with DeepSeek...")
-            adapted_data = adapt_content_for_student(
-                material=material,
-                learning_styles=learning_styles,
-                challenges=challenges,
-                student=student
+            adapted_content = AdaptedContent.objects.get(
+                original_material=material,
+                student=request.user
             )
-            
-            if adapted_data['success']:
-                # Save adapted content
-                adapted_content = AdaptedContent.objects.create(
-                    original_material=material,
-                    student_profile=student,
-                    adapted_text=adapted_data['adapted_text'],
-                    teaching_script=adapted_data['teaching_script'],
-                    cache_key=cache_key
-                )
-                adapted_content.learning_styles.set(learning_styles)
-                adapted_content.challenges.set(challenges)
-                
-                print(f"✅ Content adapted, starting video generation in background...")
-                
-                # Start video generation in background thread
-                thread = threading.Thread(
-                    target=generate_video_background,
-                    args=(adapted_content.id,)
-                )
-                thread.daemon = True
-                thread.start()
-                
-                video_status = 'processing'
-                
-            else:
-                messages.error(request, f"Failed to adapt content: {adapted_data.get('error')}")
-                
-        except Exception as e:
-            messages.error(request, f"Error: {str(e)}")
-            print(f"❌ Error in material_detail: {e}")
-    
-    # Get or create progress
-    progress, _ = StudentProgress.objects.get_or_create(
-        student=student,
-        material=material,
-        defaults={'completion_percentage': 0, 'time_spent': 0}
-    )
+        except AdaptedContent.DoesNotExist:
+            # Trigger AI adaptation
+            adapted_content = adapt_content_for_student(material, request.user)
     
     context = {
         'material': material,
-        'adapted_content': adapted_content,
-        'avatar_video': avatar_video,
-        'student': student,
-        'learning_styles': learning_styles,
-        'challenges': challenges,
         'progress': progress,
-        'video_status': video_status,
+        'adapted_content': adapted_content,
     }
     
-    return render(request, 'materials/material_detail.html', context)
-
-
-    
+    return render(request, 'material_detail.html', context)
 
 # Add this new AJAX endpoint for video generation
 @login_required
@@ -544,58 +462,32 @@ def generate_video(request, material_id):
         }, status=500)
 
 
+# Add this new view to check video status
 @login_required
-def check_video_status(request):
+def check_video_status(request, material_id):
     """
-    AJAX endpoint to check video generation status
+    Check the status of video generation (for polling)
     """
+    material = get_object_or_404(StudyMaterial, id=material_id)
+    
     try:
-        data = json.loads(request.body)
-        material_id = data.get('material_id')
-        
-        student = StudentProfile.objects.get(user=request.user)
-        material = StudyMaterial.objects.get(id=material_id)
-        
-        learning_styles = student.learning_styles.all()
-        challenges = student.challenges.all()
-        
-        style_ids = ','.join(sorted([str(ls.id) for ls in learning_styles]))
-        challenge_ids = ','.join(sorted([str(c.id) for c in challenges]))
-        cache_key = f"{material.id}{style_ids}{challenge_ids}"
-        
-        adapted_content = AdaptedContent.objects.filter(
+        adapted_content = AdaptedContent.objects.get(
             original_material=material,
-            cache_key=cache_key
-        ).first()
+            student=request.user
+        )
         
-        if not adapted_content:
-            return JsonResponse({'status': 'pending', 'message': 'Preparing content...'})
+        return JsonResponse({
+            'success': True,
+            'status': adapted_content.video_generation_status,
+            'video_url': adapted_content.video_url,
+            'error': adapted_content.video_error_message
+        })
         
-        video = AvatarVideo.objects.filter(adapted_content=adapted_content).first()
-        
-        if not video:
-            return JsonResponse({'status': 'pending', 'message': 'Starting video generation...'})
-        
-        if video.status == 'completed':
-            return JsonResponse({
-                'status': 'completed',
-                'video_url': video.get_video_url(),
-                'message': 'Video ready!'
-            })
-        elif video.status == 'failed':
-            return JsonResponse({
-                'status': 'failed',
-                'message': f'Video generation failed: {video.error_message}'
-            })
-        else:
-            return JsonResponse({
-                'status': 'processing',
-                'message': 'Generating your personalized video (60-90 seconds)...'
-            })
-            
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
-
+    except AdaptedContent.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Content not found'
+        }, status=404)
 
 
 @login_required
