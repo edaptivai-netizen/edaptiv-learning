@@ -30,6 +30,8 @@ class DIDVideoGenerator:
     def get_avatar_url(self, subject: str) -> str:
         """
         Get avatar URL - UPLOAD YOUR IMAGE TO AWS FIRST!
+        
+       
         """
         
         # 🎨  YOUR IMGAGE URL!
@@ -49,25 +51,6 @@ class DIDVideoGenerator:
     def get_voice_id(self, subject: str = None) -> str:
         """Get Microsoft voice - en-US-NancyNeural"""
         return 'en-US-NancyNeural'
-    
-    def download_video(self, video_url: str) -> bytes:
-        """
-        Download video from D-ID temporary URL
-        Returns video content as bytes
-        """
-        try:
-            print(f"📥 Downloading video from: {video_url[:50]}...")
-            response = requests.get(video_url, timeout=300)
-            response.raise_for_status()
-            
-            video_content = response.content
-            print(f"✅ Downloaded {len(video_content)} bytes")
-            return video_content
-            
-        except Exception as e:
-            print(f"❌ Error downloading video: {e}")
-            return None
-    
     
     def create_video(
         self, 
@@ -128,7 +111,7 @@ class DIDVideoGenerator:
                 json=payload,
                 headers=self.get_headers()
             )
-            response.raise_for_status()
+            
             print(f"📡 API Response: {response.status_code}")
             
             if response.status_code not in [200, 201]:
@@ -148,40 +131,28 @@ class DIDVideoGenerator:
                 raise Exception("No talk ID received from D-ID")
             
             print(f"✅ Video job created! ID: {talk_id}")
-            print(f"⏳ Waiting for video to be ready...")
+            print(f"⏳ Generating video (60-120 seconds)...")
             
             # Wait for video to be ready
             video_url = self.wait_for_video(talk_id)
             
-            if not video_url:
-                raise Exception("Video generation failed or timed out")
-            
-            print(f"🎉 Video ready! Temporay URL: {video_url[:50]}...")
-
-            #STEP 3: Download video content
-            video_content = self.download_video(video_url)
-
-            if not video_content:
-                raise Exception("Failed to download video")
-
-            return {
-                'success': True,
-                'video_url': video_url, #Temporary (will expire)
-                'video_content': video_content,  # Permanent download
-                'talk_id': talk_id,
-                'duration': result.get('duration', 0),
-                'avatar_used': avatar_url,
-                'voice_used': voice_id
-            }
-        except Exception as e:
-            print(f"❌ Error: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-                'video_url': None,
-                'video_content': None,
-                'talk_id': None
-            }
+            if video_url:
+                print(f"🎉 Video ready!")
+                return {
+                    'success': True,
+                    'video_url': video_url,
+                    'talk_id': talk_id,
+                    'duration': result.get('duration', 0),
+                    'avatar_used': avatar_url,
+                    'voice_used': voice_id
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Video generation timed out',
+                    'video_url': None,
+                    'talk_id': None
+                }
             
         except requests.exceptions.RequestException as e:
             error_msg = f"D-ID API error: {str(e)}"
@@ -190,8 +161,23 @@ class DIDVideoGenerator:
                 error_msg = f"{error_msg} - {error_detail}"
             except:
                 pass
-        
-        
+            
+            print(f"❌ {error_msg}")
+            return {
+                'success': False,
+                'error': error_msg,
+                'video_url': None,
+                'talk_id': None
+            }
+        except Exception as e:
+            error_msg = f"Video creation error: {str(e)}"
+            print(f"❌ {error_msg}")
+            return {
+                'success': False,
+                'error': error_msg,
+                'video_url': None,
+                'talk_id': None
+            }
     
     def wait_for_video(self, talk_id: str, max_wait: int = 180) -> Optional[str]:
         """Poll D-ID API until video is ready"""
@@ -216,15 +202,20 @@ class DIDVideoGenerator:
                 if status == 'done':
                     return result.get('result_url')
                 elif status == 'error':
-                    raise Exception(f"Video generation failed: {result.get('error')}")
-                
-                time.sleep(poll_interval)
+                    error = result.get('error', 'Unknown')
+                    print(f"❌ Generation failed: {error}")
+                    return None
+                elif status in ['created', 'started']:
+                    time.sleep(poll_interval)
+                else:
+                    print(f"⚠️ Unknown status: {status}")
+                    time.sleep(poll_interval)
                 
             except Exception as e:
-                print(f"❌ Error polling: {e}")
+                print(f"❌ Polling error: {e}")
                 return None
         
-        print(f"⏰ Timed out after {max_wait} seconds")
+        print(f"⏰ Timeout after {max_wait}s")
         return None
     
     def get_video_info(self, talk_id: str) -> Dict:
