@@ -352,7 +352,7 @@ def generate_video(request, material_id):
     try:
         adapted = AdaptedContent.objects.get(original_material=material, student=student)
 
-        # Already ready
+        # If already ready
         if adapted.video_s3_key and adapted.video_generation_status == "ready":
             return JsonResponse({
                 "success": True,
@@ -361,7 +361,6 @@ def generate_video(request, material_id):
                 "video_url": adapted.get_s3_url(),
             })
 
-        # Mark as generating
         adapted.video_generation_status = "generating"
         adapted.save()
 
@@ -378,16 +377,19 @@ def generate_video(request, material_id):
             adapted.save()
             return JsonResponse({"success": False, "error": result.get("error")})
 
-        # ---- Ensure video stream is BytesIO ----
-        if "video_stream" in result:
-            video_bytes= result['video_stream'].read() if hasattr(result['video_stream'], 'read') else result['video_stream']
-            video_stream = BytesIO(video_bytes)
-
-        else:
+        # Convert to BytesIO
+        if "video_stream" not in result:
             raise ValueError("No video stream returned from D-ID")
-        
-        # ----------------------------------------
 
+        raw_bytes = (
+            result["video_stream"].read()
+            if hasattr(result["video_stream"], "read")
+            else result["video_stream"]
+        )
+
+        video_stream = BytesIO(raw_bytes)
+        video_stream.seek(0)
+        # --- S3 upload ---
         s3 = boto3.client(
             "s3",
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -397,16 +399,23 @@ def generate_video(request, material_id):
 
         filename = f"videos/{material.id}_{uuid.uuid4().hex[:8]}.mp4"
 
+        
+        print("Uploading to:", settings.AWS_STORAGE_BUCKET_NAME, filename)
+
         s3.upload_fileobj(
-            Fileobj=result["video_stream"],  # STREAM INSTEAD OF BYTES
+            Fileobj=video_stream,      # FIXED
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
             Key=filename,
             ExtraArgs={"ContentType": "video/mp4"}
         )
 
-        # Save ONLY the key
+        print("UPLOAD SUCCESS")
+
+        
+
+        # Save metadata
         adapted.video_s3_key = filename
-        adapted.video_url = adapted.get_s3_url()  # presigned URL generated here
+        adapted.video_url = adapted.get_s3_url()
         adapted.video_talk_id = result.get("talk_id")
         adapted.video_duration = result.get("duration", 0)
         adapted.video_generation_status = "ready"
@@ -420,9 +429,10 @@ def generate_video(request, material_id):
         })
 
     except Exception as e:
-        adapted.video_generation_status = "failed"
-        adapted.video_error_message = str(e)
-        adapted.save()
+        if 'adapted' in locals():
+            adapted.video_generation_status = "failed"
+            adapted.video_error_message = str(e)
+            adapted.save()
         return JsonResponse({"success": False, "error": str(e)})
 
 # Add this new view to check video status
