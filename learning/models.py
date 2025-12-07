@@ -290,8 +290,6 @@ class AdaptedContent(models.Model):
     applied_challenges = models.ManyToManyField(Challenge, blank=True)
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='adapted_content', null=True, blank=True)
 
-    video_url = models.URLField(max_length=500, blank=True, null=True, help_text="D-ID generated video URL")
-
     video_s3_key = models.CharField(max_length=500, blank=True, null=True)
 
     video_talk_id = models.CharField(max_length=100, blank=True, null=True, help_text="D-ID talk ID for reference")
@@ -309,7 +307,11 @@ class AdaptedContent(models.Model):
     )
     video_error_message = models.TextField(blank=True, null=True, help_text="Error if video generation failed")
 
-    
+    def get_s3_url(self):
+        if not self.video_s3_key:
+            return None
+        return f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{self.video_s3_key}"
+
 
 
     def save(self, *args, **kwargs):
