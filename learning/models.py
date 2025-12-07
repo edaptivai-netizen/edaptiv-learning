@@ -323,19 +323,19 @@ class AdaptedContent(models.Model):
             region_name=settings.AWS_S3_REGION_NAME,
         )
         
-        return s3.generate_presigned_url(
+        url = s3.generate_presigned_url(
             "get_object",
             Params={
                 "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
                 "Key": self.video_s3_key
-        },
-        ExpiresIn=3600  # 1 hour    )
-            return url
+            },
+            ExpiresIn=3600  # 1 hour
         )
+
+        return url  # ✅ INSIDE the function
+        
     
-        except ClientError as e:
-            logging.error(f"Error generating presigned URL: {e}")
-            return None
+        
 
     def save(self, *args, **kwargs):
         if not self.institution and self.uploaded_by and getattr(self.uploaded_by, "institution", None):
