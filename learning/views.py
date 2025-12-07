@@ -18,6 +18,10 @@ import json
 from utils.s3 import generate_presigned_url
 from django.conf import settings
 from io import BytesIO
+import boto3
+import uuid
+from io import BytesIO
+
 #-----------
 #health
 #---------
@@ -360,7 +364,7 @@ def generate_video(request, material_id):
                 "status": "ready",
                 "video_url": adapted.get_s3_url(),
             })
-
+    #mark as generating 
         adapted.video_generation_status = "generating"
         adapted.save()
 
@@ -370,7 +374,8 @@ def generate_video(request, material_id):
 
         did = DIDVideoGenerator()
         result = did.create_video(script, material.subject, student.first_name)
-
+        print("DID RESULT:", result)
+        
         if not result["success"]:
             adapted.video_generation_status = "failed"
             adapted.video_error_message = result.get("error")

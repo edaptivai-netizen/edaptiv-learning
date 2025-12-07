@@ -325,21 +325,24 @@
         <!-- VIDEO SECTION -->
         <div class="video-section">
             <h2 style="margin-bottom: 1rem;">🎥 Your Personal AI Tutor</h2>
-            
+
             <div id="video-container-wrapper">
-                {% if adapted_content.video_url and adapted_content.video_generation_status == 'ready' %}
-                    <!-- Video is ready -->
+        {% if adapted_content %}
+                <!-- Check if video has S3 key or URL -->
+                {% if adapted_content.video_s3_key %}
+                    <!-- Video exists in S3 -->
                     <div class="video-container">
-                        <video id="lesson-video" controls width="100%" controlsList="nodownload">
-                            <source src="{{ adapted_content.video_url }}" type="video/mp4">
+                        <video id="lesson-video" class="video-player" controls>
+                            <source src="{{ video_url }}" type="video/mp4">
                             Your browser does not support video playback.
                         </video>
                     </div>
                     <div class="video-info">
                         ✅ Video ready! Your personalized AI tutor will guide you through this lesson.
                     </div>
+
                 {% else %}
-                    <!-- Video needs to be generated -->
+                    <!-- No video yet - need to generate -->
                     <div id="video-loading" class="video-loading">
                         <div class="spinner"></div>
                         <h3>🎬 Generating Your Personal AI Tutor...</h3>
@@ -349,10 +352,22 @@
                         </p>
                     </div>
                 {% endif %}
+
+            {% else %}
+                <!-- No video exists yet - need to generate -->
+                <div id="video-loading" class="video-loading">
+                    <div class="spinner"></div>
+                    <h3>🎬 Generating Your Personal AI Tutor...</h3>
+                    <p id="loading-message">Please wait while we create your personalized video lesson. This takes about 60-90 seconds.</p>
+                    <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 1rem;">
+                        <span id="generation-timer">0</span> seconds elapsed
+                    </p>
+                </div>
+            {% endif %}
             </div>
         </div>
         {% endif %}
-
+        
         <!-- Progress Section -->
         {% if progress %}
         <div class="progress-section">
@@ -466,8 +481,8 @@
 
         function generateVideo() {
     console.log('🎬 Starting video generation...');
-    
-    fetch(${window.API_BASE}{% url "generate-video" material.id %}, {
+
+    fetch(window.API_BASE + '{% url "generate-video" material.id %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -496,7 +511,7 @@
 
         function pollVideoStatus() {
     videoGenerationInterval = setInterval(() => {
-        fetch(${window.API_BASE}{% url "check-video-status" material.id %}, {
+        fetch(window.API_BASE + '{% url "check-video-status" material.id %}', {
             method: 'GET',
             credentials: 'include'
         })
@@ -563,7 +578,7 @@
     body.append('completion_percentage', newProgress);
     body.append('time_spent', timeSpent);
 
-    fetch(${window.API_BASE}{% url "update-progress" material.id %}, {
+    fetch(window.API_BASE + '{% url "update-progress" material.id %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
