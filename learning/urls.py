@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from .views import health_check
 
+
 urlpatterns = [
     # Homepage
     path('', views.home_view, name='home'),
@@ -46,4 +47,11 @@ urlpatterns = [
 
     path('api/check-video-status/', views.check_video_status, name='check_video_status'),
 
+    path('materials/<int:material_id>/', views.material_detail, name='material_detail'),
+    path('api/check-video-status/', views.check_video_status, name='check_video_status'),
+    path('api/generate-video/', views.generate_video, name='generate_video'),
+
+     path('materials/<int:material_id>/generate-video/', views.generate_video, name='generate-video'),
+    path('materials/<int:material_id>/get-fresh-video/', views.get_fresh_video, name='get-fresh-video'),
+    path('materials/<int:material_id>/', views.material_detail, name='material-detail'),
 ]
