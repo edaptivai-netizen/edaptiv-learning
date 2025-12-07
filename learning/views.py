@@ -357,6 +357,7 @@ def generate_video(request, material_id):
             return JsonResponse({
                 "success": True,
                 "cached": True,
+                "status": "ready",
                 "video_url": adapted.get_s3_url(),
             })
 
