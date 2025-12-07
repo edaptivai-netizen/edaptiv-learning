@@ -17,7 +17,7 @@ from utils.ai_integration import DIDVideoGenerator
 import json
 from utils.s3 import generate_presigned_url
 from django.conf import settings
-
+from io import BytesIO
 #-----------
 #health
 #---------
@@ -377,7 +377,16 @@ def generate_video(request, material_id):
             adapted.save()
             return JsonResponse({"success": False, "error": result.get("error")})
 
-        # ---- STREAMING UPLOAD TO S3 ----
+        # ---- Ensure video stream is BytesIO ----
+        if "video_stream" in result:
+            video_bytes= result['video_stream'].read() if hasattr(result['video_stream'], 'read') else result['video_stream']
+            video_stream = BytesIO(video_bytes)
+
+        else:
+            raise ValueError("No video stream returned from D-ID")
+        
+        # ----------------------------------------
+
         s3 = boto3.client(
             "s3",
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -396,7 +405,7 @@ def generate_video(request, material_id):
 
         # Save ONLY the key
         adapted.video_s3_key = filename
-        adapted.video_url = adapted.get_s3_url()  # no more signed D-ID URL
+        adapted.video_url = adapted.get_s3_url()  # presigned URL generated here
         adapted.video_talk_id = result.get("talk_id")
         adapted.video_duration = result.get("duration", 0)
         adapted.video_generation_status = "ready"
