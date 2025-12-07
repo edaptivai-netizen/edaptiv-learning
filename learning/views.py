@@ -347,22 +347,22 @@ def generate_video(request, material_id):
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'POST required'}, status=400)
-    
+
     material = get_object_or_404(StudyMaterial, id=material_id)
-    
+
     if not hasattr(request.user, 'student_profile'):
         return JsonResponse({'success': False, 'error': 'Student profile required'}, status=403)
-    
+
     try:
         student_profile = request.user.student_profile
-        
+
         # Get adapted content for this student
         adapted_content = AdaptedContent.objects.get(
             original_material=material,
             student=request.user
         )
-        
-        # Check if video already exists and is ready
+
+        # If video already exists and is ready
         if adapted_content.video_url and adapted_content.video_generation_status == 'ready':
             return JsonResponse({
                 'success': True,
@@ -370,93 +370,119 @@ def generate_video(request, material_id):
                 'status': 'ready',
                 'cached': True
             })
-        
-        # Check if video is currently generating
+
+        # If currently generating
         if adapted_content.video_generation_status == 'generating':
             return JsonResponse({
                 'success': True,
                 'status': 'generating',
                 'message': 'Video is being generated, please wait...'
             })
-        
-        # Check for cached video from other students
+
+        # Check cached videos from others with similar profiles
         matching_content = AdaptedContent.find_matching_video(
             material=material,
             learning_style=student_profile.learning_style,
             challenges=student_profile.challenges.all()
         )
-        
+
         if matching_content:
-            # Reuse existing video!
             adapted_content.video_url = matching_content.video_url
             adapted_content.video_talk_id = matching_content.video_talk_id
             adapted_content.video_duration = matching_content.video_duration
             adapted_content.video_generation_status = 'ready'
             adapted_content.video_generated_at = matching_content.video_generated_at
             adapted_content.save()
-            
+
             return JsonResponse({
                 'success': True,
                 'video_url': adapted_content.video_url,
                 'status': 'ready',
                 'cached': True
             })
-        
+
         # Mark as generating
         adapted_content.video_generation_status = 'generating'
         adapted_content.save()
-        
-        # Get script from adapted content
+
+        # Get script
         script_text = adapted_content.adapted_text.strip()
-        
-        # Ensure script is not empty
+
         if len(script_text) < 10:
-            # Fallback: use material description
             script_text = f"Hello! Let me explain {material.title}. {material.description}"
-        
-        # Limit to 3000 characters for D-ID
+
         if len(script_text) > 3000:
             script_text = script_text[:2997] + "..."
-        
-        print(f"🎬 Generating video with script length: {len(script_text)}")
-        print(f"Script preview: {script_text[:200]}...")
-        
-        # Generate video with D-ID
+
+        print(f"🎬 Script length: {len(script_text)}")
+        print(f"Preview: {script_text[:200]}...")
+
+        # Generate video using D-ID
         from utils.ai_integration import DIDVideoGenerator
         did = DIDVideoGenerator()
+
         video_result = did.create_video(
             script=script_text,
             subject=material.subject,
             student_name=request.user.first_name
         )
-        
+
         if video_result['success']:
-            # Save video information
+            # Save to S3
             import uuid
-import boto3
-from django.conf import settings
+            import boto3
+            from django.conf import settings
 
-s3 = boto3.client(
-    "s3",
-    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-    region_name=settings.AWS_S3_REGION_NAME,
-)
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME,
+            )
 
-# Generate unique key
-filename = f"videos/{material.id}_{uuid.uuid4().hex[:8]}.mp4"
+            # Unique filename for this video's S3 object
+            filename = f"videos/{material.id}_{uuid.uuid4().hex[:8]}.mp4"
 
-# Upload binary video content
-s3.put_object(
-    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-    Key=filename,
-    Body=video_result['video_content'],
-    ContentType="video/mp4"
-)
+            s3.put_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=filename,
+                Body=video_result['video_content'],
+                ContentType="video/mp4"
+            )
 
-# Save only key
-adapted_content.video_s3_key = filename
+            adapted_content.video_s3_key = filename
+            adapted_content.video_generation_status = 'ready'
+            adapted_content.save()
 
+            return JsonResponse({
+                'success': True,
+                'video_key': filename,
+                'status': 'ready',
+                'cached': False
+            })
+
+        else:
+            print("❌ D-ID video generation failed:", video_result)
+            adapted_content.video_generation_status = 'failed'
+            adapted_content.save()
+
+            return JsonResponse({
+                'success': False,
+                'error': 'Video generation failed',
+                'details': video_result
+            })
+
+    except AdaptedContent.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Adapted content not found'
+        }, status=404)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 # Add this new view to check video status
 @login_required
