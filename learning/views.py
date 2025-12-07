@@ -396,7 +396,7 @@ def generate_video(request, material_id):
 
         # Save ONLY the key
         adapted.video_s3_key = filename
-        adapted.video_url = None  # no more signed D-ID URL
+        adapted.video_url = adapted.get_s3_url()  # no more signed D-ID URL
         adapted.video_talk_id = result.get("talk_id")
         adapted.video_duration = result.get("duration", 0)
         adapted.video_generation_status = "ready"

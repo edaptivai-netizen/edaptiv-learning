@@ -5,7 +5,8 @@ from config import settings
 import random
 import string
 from datetime import datetime
-
+import boto3
+from django.conf import settings
 
 
 # -------------------------
@@ -291,6 +292,7 @@ class AdaptedContent(models.Model):
     institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='adapted_content', null=True, blank=True)
 
     video_s3_key = models.CharField(max_length=500, blank=True, null=True)
+    video_url = models.URLField(blank=True, null=True, help_text="Direct URL to the generated video")
 
     video_talk_id = models.CharField(max_length=100, blank=True, null=True, help_text="D-ID talk ID for reference")
     video_generated_at = models.DateTimeField(null=True, blank=True, help_text="When video was generated")
@@ -307,12 +309,35 @@ class AdaptedContent(models.Model):
     )
     video_error_message = models.TextField(blank=True, null=True, help_text="Error if video generation failed")
 
-    def get_s3_url(self):
+  
+
+    def get_s3_url(self, expires_in=604800):  # 7 days
+        """Generate a presigned S3 URL for the video"""
         if not self.video_s3_key:
             return None
-        return f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{self.video_s3_key}"
 
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME,
+        )
+        
+        try:
+        
+            url = s3.generate_presigned_url(
+                ClientMethod="get_object",
+                Params={
+                    "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+                    "Key": self.video_s3_key,
+                },
+                ExpiresIn=expires_in,
+            )
+            return url
 
+        except ClientError as e:
+            logging.error(f"Error generating presigned URL: {e}")
+            return None
 
     def save(self, *args, **kwargs):
         if not self.institution and self.uploaded_by and getattr(self.uploaded_by, "institution", None):
