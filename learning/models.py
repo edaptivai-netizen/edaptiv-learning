@@ -312,29 +312,37 @@ class AdaptedContent(models.Model):
   
 
     def get_s3_url(self, expires_in=604800):  # 7 days
-        """Generate a presigned S3 URL for the video"""
+        """Generate a presigned S3 URL for the video."""
         if not self.video_s3_key:
             return None
 
+        # Use your helper if you want:
+        try:
+            from utils.s3 import generate_presigned_url
+            return generate_presigned_url(self.video_s3_key, expires=expires_in)
+        except ImportError:
+            pass
+
+        # Fallback manually using boto3
         s3 = boto3.client(
             "s3",
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
             region_name=settings.AWS_S3_REGION_NAME,
         )
-        
+
         url = s3.generate_presigned_url(
             "get_object",
             Params={
                 "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
                 "Key": self.video_s3_key
             },
-            ExpiresIn=3600  # 1 hour
+            ExpiresIn=expires_in,
         )
 
-        return url  # ✅ INSIDE the function
+        return url
         
-    
+        
         
 
     def save(self, *args, **kwargs):

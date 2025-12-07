@@ -1,7 +1,7 @@
 import boto3
 from django.conf import settings
 
-def generate_presigned_url(s3_key, expires=3600):
+def generate_presigned_url(s3_key, expires=604800):
     s3 = boto3.client(
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,

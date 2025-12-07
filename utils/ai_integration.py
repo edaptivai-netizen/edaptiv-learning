@@ -88,9 +88,16 @@ class DIDVideoGenerator:
             resp = requests.get(f"{self.base_url}/talks/{talk_id}", headers=self.get_headers())
             data = resp.json()
 
-            result_url = data.get("result_url")
-            if result_url:
-                return result_url
+
+            result = data.get("result")
+            if result and isinstance(result, dict):
+                url= result.get("url")
+                if url:
+                    return result_url
+            
+            #Older API fallback
+            if "result_url" in data:
+                return data["result_url"]
 
             time.sleep(2)
 
