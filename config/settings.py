@@ -67,7 +67,7 @@ MIDDLEWARE = [
 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    "utils.middleware.refresh_presigned.RefreshPresignedURLMiddleware",
+    #"utils.middleware.refresh_presigned.RefreshPresignedURLMiddleware",
 ]
 
 
