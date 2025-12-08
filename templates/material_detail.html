@@ -318,11 +318,11 @@
 
             <div id="video-container-wrapper">
 
-                {% if adapted_content.video_s3_key %}
-                    <!-- Always generate fresh presigned URL -->
+                {% if adapted_content.video_url %}
+                    <!-- Video exists -->
                     <div class="video-container">
                         <video class="video-player" controls autoplay>
-                            <source src="{{ video_url }}" type="video/mp4">
+                            <source src="{{ adapted_content.video_url }}" type="video/mp4">
                         </video>
                     </div>
                     <div class="video-info">✅ Video ready!</div>
@@ -383,7 +383,7 @@ function updateGenerationTimer() {
 }
 setInterval(updateGenerationTimer, 1000);
 
-{% if adapted_content and not adapted_content.video_s3_key %}
+{% if adapted_content and not adapted_content.video_url %}
 window.addEventListener("DOMContentLoaded", () => {
     startVideoGeneration();
 });
