@@ -25,9 +25,17 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpResponseBadRequest
 import requests
 from learning.models import AdaptedContent
-from materials.models import Material, Student
+from learning.models import StudyMaterial, StudentProfile
 from utils.s3 import upload_fileobj, generate_presigned_url
-      # ← ADD THIS
+import logging   
+logger = logging.getLogger(__name__)
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.utils import timezone 
+from utils.s3 import generate_presigned_url
+import requests
 
 #-----------
 #health
@@ -356,10 +364,7 @@ def generate_video(request, material_id):
     adapted.video_error_message = None
     adapted.save(update_fields=["video_generation_status", "video_error_message"])
 
-    script = (adapted.adapted_text or "").strip()
-    if len(script) < 10:
-        script = f"Hello! Let's learn about {material.title}. {material.description or ''}"
-
+    
     try:
         did = DIDVideoGenerator()
         # compose an S3 key — unique
@@ -421,25 +426,38 @@ def get_fresh_video(request, material_id):
 # Add this new view to check video status
 @login_required
 def check_video_status(request, material_id):
-
     material = get_object_or_404(StudyMaterial, id=material_id)
+    student = request.user
 
-    try:
-        adapted = AdaptedContent.objects.get(
-            original_material=material,
-            student=request.user
-        )
+    adapted = get_object_or_404(
+        AdaptedContent,
+        original_material=material,
+        student=student
+    )
 
+    response = {
+        "success": True,
+        "status": adapted.video_generation_status,
+        "error": adapted.video_error_message
+    }
+
+    # If generation failed
+    if adapted.video_generation_status == "failed":
         return JsonResponse({
-            "success": True,
-            "status": adapted.video_generation_status,
-            "video_url": generate_presigned_url(adapted.video_s3_key, expires_in=300)
-                if adapted.video_s3_key else None,
-            "error": adapted.video_error_message
+            "status": "failed",
+            "error": adapted.video_error_message or "Video generation failed."
         })
 
-    except AdaptedContent.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Not found"}, status=404)
+    # If video ready
+    if adapted.video_generation_status == "completed" and adapted.video_s3_key:
+        fresh_url = generate_presigned_url(adapted.video_s3_key, expires_in=300)
+        return JsonResponse({
+            "status": "completed",
+            "video_url": fresh_url
+        })
+
+    # Still generating
+    return JsonResponse({"status": "generating"})
 
 @login_required
 def upload_material(request):

@@ -41,6 +41,13 @@ urlpatterns = [
         name='get-fresh-video'
     ),
 
+    path(
+    "get-fresh-video/<int:material_id>/",
+    views.get_fresh_video,
+    name="get-fresh-video"
+),
+
+
     # Progress
     path(
         'materials/<int:material_id>/update-progress/',
