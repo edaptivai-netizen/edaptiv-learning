@@ -365,7 +365,7 @@ def generate_video(request, material_id):
         # compose an S3 key — unique
         filename_key = f"videos/{material.id}_{uuid.uuid4().hex[:12]}.mp4"
 
-        result = did.create_and_upload(script, material.subject, s3_key=filename_key, timeout_sec=240)
+        result = did.create_and_upload(script, material.subject, s3_key=filename_key, timeout_sec=180)
         if not result.get("success"):
             adapted.video_generation_status = "failed"
             adapted.video_error_message = result.get("error")
@@ -433,8 +433,8 @@ def check_video_status(request, material_id):
         return JsonResponse({
             "success": True,
             "status": adapted.video_generation_status,
-            "video_url": generate_presigned_url(adapted.video_s3_key)
-            if adapted.video_s3_key else None,
+            "video_url": generate_presigned_url(adapted.video_s3_key, expires_in=300)
+                if adapted.video_s3_key else None,
             "error": adapted.video_error_message
         })
 
