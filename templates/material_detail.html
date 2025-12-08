@@ -321,8 +321,8 @@
                 {% if adapted_content.video_url %}
                     <!-- Video exists -->
                     <div class="video-container">
-                        <video class="video-player" controls autoplay>
-                            <source src="{{ adapted_content.video_url }}" type="video/mp4">
+                        <video id= "ai-video" class="video-player" controls autoplay>
+                            <source src="{{ video_url }}" type="video/mp4">
                         </video>
                     </div>
                     <div class="video-info">✅ Video ready!</div>
@@ -451,6 +451,26 @@ function showError(msg) {
     `;
 }
 {% endif %}
+
+<script>
+const materialId = "{{ material.id }}";
+
+async function refreshVideo() {
+    const res = await fetch(`/get-fresh-video/${materialId}/`);
+    const data = await res.json();
+
+    if (data.success && data.video_url) {
+        const video = document.getElementById("ai-video");
+        const source = document.getElementById("video-source");
+        source.src = data.video_url;
+        video.load();
+        video.play();
+    }
+}
+
+setInterval(refreshVideo, 10 * 1000); // refresh every 10 seconds
+
+
 </script>
 
 </body>
