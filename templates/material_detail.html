@@ -318,14 +318,23 @@
 
             <div id="video-container-wrapper">
 
-                {% if adapted_content.video_url %}
+                {% if video_url %}
                     <!-- Video exists -->
                     <div class="video-container">
-                        <video class="video-player" controls autoplay>
-                            <source src="{{ adapted_content.video_url }}" type="video/mp4">
+                        <video class="video-player" controls autoplay id="video-player-element">
+                            <source src="{{ video_url }}" type="video/mp4">
                         </video>
                     </div>
-                    <div class="video-info">✅ Video ready!</div>
+                    <div class="video-info">✅ Video ready!<span id="refresh-ststus"</span></div>
+                    
+                        <!-- Add this script to start URL refresh for existing videos -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (document.getElementById('video-player-element')) {
+                                startUrlRefresh();
+                            }
+                        });
+                    </script>
 
                 {% else %}
                     <!-- No video yet — generating -->
@@ -376,6 +385,8 @@ const csrftoken = getCookie('csrftoken');
 
 /* ---------- VIDEO GENERATION ---------- */
 let generationStartTime = Date.now();
+let videoRefreshInterval = null;
+let currentVideoUrl = null;
 
 function updateGenerationTimer() {
     let t = document.getElementById("generation-timer");
@@ -387,6 +398,7 @@ setInterval(updateGenerationTimer, 1000);
 window.addEventListener("DOMContentLoaded", () => {
     startVideoGeneration();
 });
+{% endif %}
 
 function startVideoGeneration() {
     fetch(`{{ API_BASE }}{% url 'generate-video' material.id %}`, {
@@ -418,9 +430,11 @@ function pollVideo() {
         })
         .then(r => r.json())
         .then(data => {
-            if (data.status === "ready" && data.video_url) {
+            if (data.status === "completed" && data.video_url) {
                 clearInterval(poller);
                 showVideo(data.video_url);
+                // Start refreshing the URL every 30 minutes
+                startUrlRefresh();
             }
             else if (data.status === "failed") {
                 clearInterval(poller);
@@ -431,14 +445,112 @@ function pollVideo() {
 }
 
 function showVideo(url) {
+    currentVideoUrl = url;
+    
     document.getElementById("video-container-wrapper").innerHTML = `
         <div class="video-container">
-            <video class="video-player" controls autoplay>
+            <video class="video-player" controls autoplay id="video-player-element">
                 <source src="${url}" type="video/mp4">
             </video>
         </div>
-        <div class="video-info">✅ Video ready!</div>
+        <div class="video-info">✅ Video ready! <span id="refresh-status"></span></div>
     `;
+    
+    // Add event listeners for video errors
+    const videoElement = document.getElementById('video-player-element');
+    if (videoElement) {
+        videoElement.addEventListener('error', handleVideoError);
+        videoElement.addEventListener('ended', handleVideoEnded);
+    }
+    
+    // Start URL refresh
+    startUrlRefresh();
+}
+
+// NEW FUNCTION: Refresh video URL before it expires
+function refreshVideoUrl() {
+    fetch(`{{ API_BASE }}{% url 'get-fresh-video' material.id %}`, {  // FIXED: 'get-fresh-video' not 'get_fresh_video'
+        method: "GET",
+        credentials: "include"
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.video_url) {
+            currentVideoUrl = data.video_url;
+            const videoElement = document.getElementById('video-player-element');
+            const refreshStatus = document.getElementById('refresh-status');
+            
+            if (videoElement) {
+                // Store current playback state
+                const currentTime = videoElement.currentTime;
+                const isPaused = videoElement.paused;
+                
+                // Update source
+                videoElement.src = data.video_url;
+                
+                // Restore playback state
+                videoElement.currentTime = currentTime;
+                if (!isPaused) {
+                    videoElement.play().catch(e => console.log('Auto-play prevented'));
+                }
+                
+                console.log('Video URL refreshed successfully');
+                
+                // Update status
+                if (refreshStatus) {
+                    refreshStatus.textContent = '✓ URL refreshed';
+                    refreshStatus.style.color = '#10b981';
+                    setTimeout(() => {
+                        refreshStatus.textContent = '';
+                    }, 3000);
+                }
+            }
+        }
+    })
+    .catch(err => {
+        console.error('Failed to refresh video URL:', err);
+        const refreshStatus = document.getElementById('refresh-status');
+        if (refreshStatus) {
+            refreshStatus.textContent = '⚠ Refresh failed';
+            refreshStatus.style.color = '#ef4444';
+        }
+    });
+}
+
+// NEW FUNCTION: Start periodic URL refresh
+function startUrlRefresh() {
+    // Clear any existing interval
+    if (videoRefreshInterval) {
+        clearInterval(videoRefreshInterval);
+    }
+    
+    // Refresh every 30 minutes (1800000 ms) - less than the 6-hour expiration
+    videoRefreshInterval = setInterval(refreshVideoUrl, 30 * 60 * 1000);
+    
+    // Also refresh on page visibility change (when user returns to tab)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            console.log('Page visible again, refreshing video URL...');
+            refreshVideoUrl();
+        }
+    });
+    
+    console.log('URL refresh scheduled every 30 minutes');
+}
+
+// NEW FUNCTION: Handle video errors (like expired URL)
+function handleVideoError(e) {
+    const videoElement = document.getElementById('video-player-element');
+    if (videoElement && videoElement.error) {
+        console.log('Video error detected, refreshing URL...');
+        refreshVideoUrl();
+    }
+}
+
+// NEW FUNCTION: Handle video ended (optional)
+function handleVideoEnded() {
+    console.log('Video ended, refreshing URL for next play...');
+    refreshVideoUrl();
 }
 
 function showError(msg) {
@@ -449,8 +561,20 @@ function showError(msg) {
             <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
         </div>
     `;
+    
+    // Clear refresh interval if error occurs
+    if (videoRefreshInterval) {
+        clearInterval(videoRefreshInterval);
+        videoRefreshInterval = null;
+    }
 }
-{% endif %}
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+    if (videoRefreshInterval) {
+        clearInterval(videoRefreshInterval);
+    }
+});
 </script>
 
 </body>
