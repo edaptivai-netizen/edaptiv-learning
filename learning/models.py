@@ -270,7 +270,7 @@ class StudyMaterial(models.Model):
 
 
 # -------------------------
-# Adapted Content (AI-Generated)
+# Adapted Content (Kimi AI-Generated)
 # -------------------------
 class AdaptedContent(models.Model):
     original_material = models.ForeignKey(StudyMaterial, on_delete=models.CASCADE, related_name='adapted_versions')
@@ -341,8 +341,8 @@ class AdaptedContent(models.Model):
         )
 
         return url
-        
-        
+     
+    
         
 
     def save(self, *args, **kwargs):
@@ -441,10 +441,12 @@ class AvatarVideo(models.Model):
     Stores generated avatar videos
     Now with permanent file storage!
     """
-    adapted_content = models.ForeignKey(
-        'AdaptedContent',
+    adapted_content = models.OneToOneField(
+        'learning.AdaptedContent',
         on_delete=models.CASCADE,
-        related_name='avatar_videos'
+        related_name='avatar_video',
+        null=True,
+        blank=True,
     )
     
     # Option 1: Store file permanently (RECOMMENDED)
@@ -457,13 +459,14 @@ class AvatarVideo(models.Model):
     
     # Option 2: Temporary D-ID URL (expires in 3-7 days)
     video_url = models.URLField(
-        max_length=500,
+        max_length=1200,
         blank=True,
         help_text='Temporary D-ID URL (will expire)'
     )
     
     talk_id = models.CharField(
-        max_length=100,
+        max_length=128,
+        null=True,
         blank=True,
         help_text='D-ID talk ID for reference'
     )
@@ -474,6 +477,15 @@ class AvatarVideo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    last_refreshed_at = models.DateTimeField(default=timezone.now)
+
+    def refresh_presigned_url(self):
+        from utils.s3 import generate_presigned_url
+        self.video_url = generate_presigned_url(self.s3_key) 
+        self.last_refreshed = timezone.now() 
+        self.save(update_fields=['video_url', 'last_refreshed_at'])
+       
+
     def get_video_url(self):
         """
         Get the video URL - prefer file over temporary URL
@@ -506,3 +518,4 @@ class AvatarVideo(models.Model):
     
     def _str_(self):
         return f"{self.avatar_name} - {self.adapted_content.original_material.title}"
+        return f"AvatarVideo {self.id} for AC {self.adapted_content.id}"
