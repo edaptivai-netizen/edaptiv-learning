@@ -1,5 +1,3 @@
-ai_integration
-
 # utils/ai_integration.py - COMPLETE FIX
 """
 D-ID Video Avatar Integration for EDAPTIV
@@ -190,7 +188,7 @@ def create_and_stream_to_s3(self, script: str, subject: str, s3_key: str, timeou
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_REGION,
+        region_name=settings.AWS_S3_REGION_NAME,
     )
     
     # Stream video directly to S3
