@@ -121,6 +121,7 @@ class DIDVideoGenerator:
         """Create video and stream directly to S3"""
         
         from django.conf import settings
+        import boto3
         
         # Create video with D-ID
         result = self.create_video(script, subject)
