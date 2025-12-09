@@ -13,5 +13,9 @@ if __name__ == "__main__":
         application, 
         host="0.0.0.0", 
         port=10000, 
-        threads=2
+        threads=4,           # More threads for health checks
+        connection_limit=100, # Limit connections
+        asyncore_loop_timeout=1,  # Faster loop
+        channel_timeout=10,  # Shorter timeout
+        cleanup_interval=30  # Clean up old connections
     )
