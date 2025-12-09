@@ -173,43 +173,61 @@ def test_video_generation():
 
 # Add this method to your DIDVideoGenerator class
 def create_and_stream_to_s3(self, script: str, subject: str, s3_key: str, timeout_sec: int = 240) -> Dict:
-    """Create video and stream directly to S3"""
-    import boto3
-    from django.conf import settings
-    
-    # Create video with D-ID
-    result = self.create_video(script, subject)
-    
-    if not result.get("success"):
-        return result
-    
-    # Initialize S3 client
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_S3_REGION_NAME,
-    )
-    
-    # Stream video directly to S3
-    try:
-        video_stream = result.get("video_stream")
-        if not video_stream:
-            return {"success": False, "error": "No video stream available"}
+        """Create video and stream directly to S3"""
+        import boto3
+        from django.conf import settings
+        import requests
         
-        # Upload stream to S3
-        s3.upload_fileobj(
-            video_stream,
-            settings.AWS_STORAGE_BUCKET_NAME,
-            s3_key,
-            ExtraArgs={'ContentType': 'video/mp4'}
-        )
-        
-        return {
-            "success": True,
-            "talk_id": result.get("talk_id"),
-            "s3_key": s3_key
-        }
-        
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+        try:
+            print(f"🚀 Creating video for S3: {s3_key}")
+            
+            # 1. Create D-ID video
+            result = self.create_video(script, subject)
+            
+            if not result.get("success"):
+                error_msg = result.get("error", "Unknown D-ID error")
+                print(f"❌ D-ID creation failed: {error_msg}")
+                return {"success": False, "error": error_msg}
+            
+            # 2. Get video URL from D-ID
+            video_url = result.get("video_url")
+            if not video_url:
+                print("❌ No video_url in D-ID response")
+                return {"success": False, "error": "No video URL from D-ID"}
+            
+            print(f"📥 Downloading from D-ID: {video_url}")
+            
+            # 3. Download video from D-ID
+            video_response = requests.get(video_url, stream=True, timeout=60)
+            video_response.raise_for_status()
+            
+            # 4. Upload to S3
+            print(f"📤 Uploading to S3: {s3_key}")
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=getattr(settings, 'AWS_DEFAULT_REGION', 'eu-north-1'),
+            )
+            
+            s3.upload_fileobj(
+                video_response.raw,
+                settings.AWS_STORAGE_BUCKET_NAME,
+                s3_key,
+                ExtraArgs={'ContentType': 'video/mp4'}
+            )
+            
+            print(f"✅ Successfully uploaded to S3: {s3_key}")
+            
+            return {
+                "success": True,
+                "talk_id": result.get("talk_id"),
+                "s3_key": s3_key,
+                "duration": result.get("duration", 0)
+            }
+            
+        except Exception as e:
+            print(f"💥 Error in create_and_stream_to_s3: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {"success": False, "error": str(e)}
