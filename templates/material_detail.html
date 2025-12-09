@@ -325,16 +325,7 @@
                             <source src="{{ video_url }}" type="video/mp4">
                         </video>
                     </div>
-                    <div class="video-info">✅ Video ready! <span id="refresh-status"></span></div>
-                    
-                    <!-- Add this script to start URL refresh for existing videos -->
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            if (document.getElementById('video-player-element')) {
-                                startUrlRefresh();
-                            }
-                        });
-                    </script>
+                    <div class="video-info">✅ Video ready!</div>
 
                 {% else %}
                     <!-- No video yet — generating -->
@@ -455,102 +446,6 @@ function showVideo(url) {
         </div>
         <div class="video-info">✅ Video ready! <span id="refresh-status"></span></div>
     `;
-    
-    // Add event listeners for video errors
-    const videoElement = document.getElementById('video-player-element');
-    if (videoElement) {
-        videoElement.addEventListener('error', handleVideoError);
-        videoElement.addEventListener('ended', handleVideoEnded);
-    }
-    
-    // Start URL refresh
-    startUrlRefresh();
-}
-
-// NEW FUNCTION: Refresh video URL before it expires
-function refreshVideoUrl() {
-    fetch(`{{ API_BASE }}{% url 'get-fresh-video' material.id %}`, {
-        method: "GET",
-        credentials: "include"
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success && data.video_url) {
-            currentVideoUrl = data.video_url;
-            const videoElement = document.getElementById('video-player-element');
-            const refreshStatus = document.getElementById('refresh-status');
-            
-            if (videoElement) {
-                // Store current playback state
-                const currentTime = videoElement.currentTime;
-                const isPaused = videoElement.paused;
-                
-                // Update source
-                videoElement.src = data.video_url;
-                
-                // Restore playback state
-                videoElement.currentTime = currentTime;
-                if (!isPaused) {
-                    videoElement.play().catch(e => console.log('Auto-play prevented'));
-                }
-                
-                console.log('Video URL refreshed successfully');
-                
-                // Update status
-                if (refreshStatus) {
-                    refreshStatus.textContent = '✓ URL refreshed';
-                    refreshStatus.style.color = '#10b981';
-                    setTimeout(() => {
-                        refreshStatus.textContent = '';
-                    }, 3000);
-                }
-            }
-        }
-    })
-    .catch(err => {
-        console.error('Failed to refresh video URL:', err);
-        const refreshStatus = document.getElementById('refresh-status');
-        if (refreshStatus) {
-            refreshStatus.textContent = '⚠ Refresh failed';
-            refreshStatus.style.color = '#ef4444';
-        }
-    });
-}
-
-// NEW FUNCTION: Start periodic URL refresh
-function startUrlRefresh() {
-    // Clear any existing interval
-    if (videoRefreshInterval) {
-        clearInterval(videoRefreshInterval);
-    }
-    
-    // Refresh every 30 minutes (1800000 ms) - less than the 6-hour expiration
-    videoRefreshInterval = setInterval(refreshVideoUrl, 30 * 60 * 1000);
-    
-    // Also refresh on page visibility change (when user returns to tab)
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            console.log('Page visible again, refreshing video URL...');
-            refreshVideoUrl();
-        }
-    });
-    
-    console.log('URL refresh scheduled every 30 minutes');
-}
-
-// NEW FUNCTION: Handle video errors (like expired URL)
-function handleVideoError(e) {
-    const videoElement = document.getElementById('video-player-element');
-    if (videoElement && videoElement.error) {
-        console.log('Video error detected, refreshing URL...');
-        refreshVideoUrl();
-    }
-}
-
-// NEW FUNCTION: Handle video ended (optional)
-function handleVideoEnded() {
-    console.log('Video ended, refreshing URL for next play...');
-    refreshVideoUrl();
 }
 
 function showError(msg) {
