@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ material.title }} - EDAPTIV</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -80,9 +84,11 @@
             gap: 1rem;
         }
 
-        .adaptation-banner-icon { font-size: 2rem; }
+        .adaptation-banner-icon {
+            font-size: 2rem;
+        }
 
-        /* VIDEO SECTION */
+        /* VIDEO SECTION STYLES */
         .video-section {
             background: white;
             padding: 2rem;
@@ -101,10 +107,10 @@
             overflow: hidden;
         }
 
-        #avatarVideo {
+        .video-player {
             width: 100%;
+            display: block;
             border-radius: 15px;
-            display: none;
         }
 
         .video-loading {
@@ -125,7 +131,19 @@
             margin: 0 auto 1.5rem;
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg);} }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .video-error {
+            text-align: center;
+            padding: 2rem;
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 15px;
+            color: #c33;
+        }
 
         .video-info {
             margin-top: 1rem;
@@ -134,6 +152,73 @@
             border-radius: 10px;
             font-size: 0.9rem;
             color: #0369a1;
+        }
+
+        .progress-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .progress-bar-container {
+            margin: 1rem 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
         }
 
         .content-section {
@@ -145,6 +230,16 @@
             font-size: 1.1rem;
         }
 
+        .content-section h2 {
+            color: #333;
+            margin: 2rem 0 1rem;
+        }
+
+        .content-section p {
+            margin-bottom: 1.5rem;
+            color: #444;
+        }
+
         .adaptation-notes {
             background: #f0f9ff;
             border-left: 4px solid #3b82f6;
@@ -153,167 +248,333 @@
             border-radius: 10px;
         }
 
+        .adaptation-notes h3 {
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer {
+            background: #f5f7fa;
+            padding: 1rem;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .material-header {
+                padding: 2rem;
+            }
+
+            .material-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content-section {
+                padding: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="logo">🎓 EDAPTIV</div>
+        <div class="nav-links">
+            <a href="{% url 'student-dashboard' %}">Dashboard</a>
+            <a href="{% url 'materials-library' %}">Materials</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </nav>
 
-<nav class="navbar">
-    <div class="logo">🎓 EDAPTIV</div>
-    <div class="nav-links">
-        <a href="{% url 'student-dashboard' %}">Dashboard</a>
-        <a href="{% url 'materials-library' %}">Materials</a>
-        <a href="{% url 'logout' %}">Logout</a>
-    </div>
-</nav>
+    <div class="container">
 
-<div class="container">
-
-    <!-- HEADER -->
-    <div class="material-header">
-        <h1>{{ material.title }}</h1>
-        <div class="material-meta">
-            <div class="meta-item">📚 {{ material.get_subject_display }}</div>
-            <div class="meta-item">📅 Uploaded {{ material.uploaded_at|date:"M d, Y" }}</div>
-            {% if material.grade_level %}
+        <!-- ===== MATERIAL HEADER ===== -->
+        <div class="material-header">
+            <h1>{{ material.title }}</h1>
+            <div class="material-meta">
+                <div class="meta-item">📚 {{ material.get_subject_display }}</div>
+                <div class="meta-item">📅 Uploaded {{ material.uploaded_at|date:"M d, Y" }}</div>
+                {% if material.grade_level %}
                 <div class="meta-item">🎓 {{ material.grade_level }}</div>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
-    </div>
 
-    {% if adapted_content %}
-    <div class="adaptation-banner">
-        <div class="adaptation-banner-icon">🤖</div>
-        <div>
-            <strong>AI‑Adapted Content</strong>
-            <p style="margin:0;">This content has been personalized for you.</p>
-        </div>
-    </div>
-
-    <!-- VIDEO SECTION -->
-    <div class="video-section">
-        <h2>🎥 Your Personal AI Tutor</h2>
-
-        <div id="video-container-wrapper">
-
-            {% if adapted_content.video_s3_key %}
-                <!-- video present -->
-                <div class="video-container">
-                    <video id="avatarVideo" controls>
-                        <source id="videoSrc" src="" type="video/mp4">
-                    </video>
-                </div>
-
-                <div class="video-info" id="videoStatus">Loading fresh video...</div>
-
-            {% else %}
-                <!-- generating -->
-                <div id="video-loading" class="video-loading">
-                    <div class="spinner"></div>
-                    <h3>🎬 Generating your personalized tutor...</h3>
-                    <p>This takes about 60–90 seconds.</p>
-                    <p><span id="generation-timer">0</span> seconds elapsed</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
-    {{ block.super }}
-
-    <div class="content-section">
+        <!-- ===== AI ADAPTATION BANNER ===== -->
         {% if adapted_content %}
-            <div class="adaptation-notes">
-                <h3>🎯 Personalization Applied</h3>
-                <p>{{ adapted_content.adaptation_notes }}</p>
+        <div class="adaptation-banner">
+            <div class="adaptation-banner-icon">🤖</div>
+            <div>
+                <strong>AI‑Adapted Content</strong>
+                <p style="margin:0;">This content has been personalized for you.</p>
             </div>
+        </div>
 
-            <div style="white-space: pre-wrap;">{{ adapted_content.adapted_text }}</div>
+        <!-- ===== VIDEO SECTION ===== -->
+        <div class="video-section">
+            <h2>🎥 Your Personal AI Tutor</h2>
 
-        {% else %}
-            <h2>{{ material.title }}</h2>
-            <p>{{ material.description }}</p>
-            <div style="padding:2rem;background:#f0f9ff;border-radius:10px;">
-                🤖 Generating personalized version…
+            <div id="video-container-wrapper">
+
+                {% if video_url %}
+                    <!-- Video exists -->
+                    <div class="video-container">
+                        <video class="video-player" controls autoplay id="video-player-element">
+                            <source src="{{ video_url }}" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="video-info">✅ Video ready! <span id="refresh-status"></span></div>
+                    
+                    <!-- Add this script to start URL refresh for existing videos -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (document.getElementById('video-player-element')) {
+                                startUrlRefresh();
+                            }
+                        });
+                    </script>
+
+                {% else %}
+                    <!-- No video yet — generating -->
+                    <div id="video-loading" class="video-loading">
+                        <div class="spinner"></div>
+                        <h3>🎬 Generating your personalized tutor...</h3>
+                        <p id="loading-message">This takes about 60–90 seconds.</p>
+                        <p><span id="generation-timer">0</span> seconds elapsed</p>
+                    </div>
+                {% endif %}
             </div>
+        </div>
         {% endif %}
-    </div>
 
-</div>
+        <!-- ===== PROGRESS SECTION (UNCHANGED) ===== -->
+        {{ block.super }}
+
+        <!-- ===== ADAPTED CONTENT ===== -->
+        <div class="content-section">
+            {% if adapted_content %}
+                <div class="adaptation-notes">
+                    <h3>🎯 Personalization Applied</h3>
+                    <p>{{ adapted_content.adaptation_notes }}</p>
+                </div>
+
+                <div style="white-space: pre-wrap;">{{ adapted_content.adapted_text }}</div>
+            {% else %}
+                <h2>{{ material.title }}</h2>
+                <p>{{ material.description }}</p>
+                <div style="padding:2rem;background:#f0f9ff;border-radius:10px;">
+                    🤖 Generating personalized version…
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
 
 <script>
-/* CSRF */
+/* ---------- BASIC SETUP ---------- */
+window.API_BASE = window.location.origin;
+
 function getCookie(name) {
     let v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
     return v ? v[2] : null;
 }
 const csrftoken = getCookie('csrftoken');
 
-const materialId = "{{ material.id }}";
-let timerStart = Date.now();
 
-setInterval(() => {
+/* ---------- VIDEO GENERATION ---------- */
+let generationStartTime = Date.now();
+let videoRefreshInterval = null;
+let currentVideoUrl = null;
+
+function updateGenerationTimer() {
     let t = document.getElementById("generation-timer");
-    if (t) t.textContent = Math.floor((Date.now() - timerStart) / 1000);
-}, 1000);
-
-/* AUTO GENERATE VIDEO IF NOT EXISTS */
-{% if adapted_content and not adapted_content.video_s3_key %}
-window.addEventListener("DOMContentLoaded", () => generateVideo());
-
-function generateVideo() {
-    fetch("{% url 'generate-video' material.id %}", {
-        method: "POST",
-        headers: {"Content-Type": "application/json", "X-CSRFToken": csrftoken},
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === "ready") loadVideo(data.video_url);
-        else if (data.status === "generating") pollStatus();
-        else showError(data.error);
-    })
-    .catch(() => showError("Network error"));
+    if (t) t.textContent = Math.floor((Date.now() - generationStartTime) / 1000);
 }
+setInterval(updateGenerationTimer, 1000);
 
-function pollStatus() {
-    fetch("{% url 'check-video-status' material.id %}")
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === "completed") loadVideo(data.video_url);
-        else if (data.status === "failed") showError("Video failed.");
-        else setTimeout(pollStatus, 4000);
-    });
-}
+{% if adapted_content and not video_url %}
+window.addEventListener("DOMContentLoaded", () => {
+    startVideoGeneration();
+});
 {% endif %}
 
-/* ALWAYS REFRESH VIDEO URL */
-async function refreshVideoURL() {
-    const res = await fetch("{% url 'get-fresh-video' material.id %}");
-    const data = await res.json();
+function startVideoGeneration() {
+    fetch(`{{ API_BASE }}{% url 'generate-video' material.id %}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+        credentials: "include"
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "completed") {
+            showVideo(data.video_url);
+        } else if (data.status === "generating") {
+            pollVideo();
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(err => showError("Network error"));
+}
 
-    if (data.success && data.video_url) {
-        loadVideo(data.video_url);
+function pollVideo() {
+    let poller = setInterval(() => {
+        fetch(`{{ API_BASE }}{% url 'check-video-status' material.id %}`, {
+            method: "GET",
+            credentials: "include"
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === "completed" && data.video_url) {
+                clearInterval(poller);
+                showVideo(data.video_url);
+                // Start refreshing the URL every 30 minutes
+                startUrlRefresh();
+            }
+            else if (data.status === "failed") {
+                clearInterval(poller);
+                showError(data.error);
+            }
+        });
+    }, 5000);
+}
+
+function showVideo(url) {
+    currentVideoUrl = url;
+    
+    document.getElementById("video-container-wrapper").innerHTML = `
+        <div class="video-container">
+            <video class="video-player" controls autoplay id="video-player-element">
+                <source src="${url}" type="video/mp4">
+            </video>
+        </div>
+        <div class="video-info">✅ Video ready! <span id="refresh-status"></span></div>
+    `;
+    
+    // Add event listeners for video errors
+    const videoElement = document.getElementById('video-player-element');
+    if (videoElement) {
+        videoElement.addEventListener('error', handleVideoError);
+        videoElement.addEventListener('ended', handleVideoEnded);
+    }
+    
+    // Start URL refresh
+    startUrlRefresh();
+}
+
+// NEW FUNCTION: Refresh video URL before it expires
+function refreshVideoUrl() {
+    fetch(`{{ API_BASE }}{% url 'get-fresh-video' material.id %}`, {
+        method: "GET",
+        credentials: "include"
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.video_url) {
+            currentVideoUrl = data.video_url;
+            const videoElement = document.getElementById('video-player-element');
+            const refreshStatus = document.getElementById('refresh-status');
+            
+            if (videoElement) {
+                // Store current playback state
+                const currentTime = videoElement.currentTime;
+                const isPaused = videoElement.paused;
+                
+                // Update source
+                videoElement.src = data.video_url;
+                
+                // Restore playback state
+                videoElement.currentTime = currentTime;
+                if (!isPaused) {
+                    videoElement.play().catch(e => console.log('Auto-play prevented'));
+                }
+                
+                console.log('Video URL refreshed successfully');
+                
+                // Update status
+                if (refreshStatus) {
+                    refreshStatus.textContent = '✓ URL refreshed';
+                    refreshStatus.style.color = '#10b981';
+                    setTimeout(() => {
+                        refreshStatus.textContent = '';
+                    }, 3000);
+                }
+            }
+        }
+    })
+    .catch(err => {
+        console.error('Failed to refresh video URL:', err);
+        const refreshStatus = document.getElementById('refresh-status');
+        if (refreshStatus) {
+            refreshStatus.textContent = '⚠ Refresh failed';
+            refreshStatus.style.color = '#ef4444';
+        }
+    });
+}
+
+// NEW FUNCTION: Start periodic URL refresh
+function startUrlRefresh() {
+    // Clear any existing interval
+    if (videoRefreshInterval) {
+        clearInterval(videoRefreshInterval);
+    }
+    
+    // Refresh every 30 minutes (1800000 ms) - less than the 6-hour expiration
+    videoRefreshInterval = setInterval(refreshVideoUrl, 30 * 60 * 1000);
+    
+    // Also refresh on page visibility change (when user returns to tab)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            console.log('Page visible again, refreshing video URL...');
+            refreshVideoUrl();
+        }
+    });
+    
+    console.log('URL refresh scheduled every 30 minutes');
+}
+
+// NEW FUNCTION: Handle video errors (like expired URL)
+function handleVideoError(e) {
+    const videoElement = document.getElementById('video-player-element');
+    if (videoElement && videoElement.error) {
+        console.log('Video error detected, refreshing URL...');
+        refreshVideoUrl();
     }
 }
 
-function loadVideo(url) {
-    const video = document.getElementById("avatarVideo");
-    const src = document.getElementById("videoSrc");
-
-    src.src = url;
-    video.load();
-    video.style.display = "block";
-
-    let status = document.getElementById("videoStatus");
-    if (status) status.innerText = "Video Ready!";
+// NEW FUNCTION: Handle video ended (optional)
+function handleVideoEnded() {
+    console.log('Video ended, refreshing URL for next play...');
+    refreshVideoUrl();
 }
 
 function showError(msg) {
-    let s = document.getElementById("videoStatus");
-    if (s) s.innerText = "Error: " + msg;
+    document.getElementById("video-container-wrapper").innerHTML = `
+        <div class="video-error">
+            <h3>❌ Video generation failed</h3>
+            <p>${msg}</p>
+            <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
+        </div>
+    `;
+    
+    // Clear refresh interval if error occurs
+    if (videoRefreshInterval) {
+        clearInterval(videoRefreshInterval);
+        videoRefreshInterval = null;
+    }
 }
 
-/* REFRESH EVERY 10s */
-setInterval(refreshVideoURL, 10000);
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+    if (videoRefreshInterval) {
+        clearInterval(videoRefreshInterval);
+    }
+});
 </script>
 
 </body>

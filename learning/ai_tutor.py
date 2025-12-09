@@ -1,3 +1,4 @@
+ai_tutor
 """
 AI Tutor Module - Content Adaptation Engine
 Adapts study materials based on student's learning style and challenges

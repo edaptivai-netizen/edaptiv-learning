@@ -1,18 +1,10 @@
 from pathlib import Path
-
 import os
 from decouple import config
 from dotenv import load_dotenv
 import dj_database_url
 
 load_dotenv()
-
-# DEBUG ONLY — remove after verifying
-print("DID_API_KEY present in environment?", bool(os.environ.get("DID_API_KEY")))
-print("AWS_STORAGE_BUCKET_NAME present?", bool(os.environ.get("AWS_STORAGE_BUCKET_NAME")))
-
-import datetime
-print("SERVER UTC TIME:", datetime.datetime.utcnow().isoformat())
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -67,7 +59,6 @@ MIDDLEWARE = [
 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    #"utils.middleware.refresh_presigned.RefreshPresignedURLMiddleware",
 ]
 
 
