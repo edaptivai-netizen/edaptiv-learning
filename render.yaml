@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: edaptiv
+    env: python
+    plan: free
+    buildCommand: |
+      pip install --no-cache-dir -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn --config gunicorn.conf.py config.wsgi:application
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"

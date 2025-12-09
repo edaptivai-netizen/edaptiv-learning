@@ -318,7 +318,7 @@ class AdaptedContent(models.Model):
 
         # Use your helper if you want:
         try:
-            from utils.s3 import generate_presigned_url
+            from utils.s3_utils import generate_presigned_url
             return generate_presigned_url(self.video_s3_key, expires=expires_in)
         except ImportError:
             pass
