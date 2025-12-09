@@ -1,4 +1,3 @@
-views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -563,3 +562,23 @@ def my_progress(request):
     }
     
     return render(request, 'my_progress.html', context)
+
+# views.py - Optimize health check
+from django.http import JsonResponse
+import time
+
+def health_check(request):
+    """Ultra-fast health check"""
+    start_time = time.time()
+    
+    # Do minimal work
+    data = {
+        "status": "healthy",
+        "timestamp": start_time,
+        "response_time_ms": 0
+    }
+    
+    # Calculate response time
+    data["response_time_ms"] = (time.time() - start_time) * 1000
+    
+    return JsonResponse(data)
