@@ -6,9 +6,10 @@ services:
     buildCommand: |
       pip install --no-cache-dir -r requirements.txt
       python manage.py collectstatic --noinput
-    startCommand: gunicorn --config gunicorn.conf.py config.wsgi:application
     envVars:
       - key: PYTHONUNBUFFERED
         value: "true"
       - key: PYTHONDONTWRITEBYTECODE
         value: "1"
+      - key: AWS_DEFAULT_REGION
+        value: "eu-north-1"
